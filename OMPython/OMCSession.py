@@ -79,6 +79,7 @@ class OMCSessionException(Exception):
     pass
 
 
+# noinspection PyPep8Naming
 class OMCSessionBase(metaclass=abc.ABCMeta):
 
     def __init__(self, readonly=False):
@@ -281,6 +282,7 @@ class OMCSessionBase(metaclass=abc.ABCMeta):
         return value
 
 
+# noinspection PyPep8Naming
 class OMCSessionZMQ(OMCSessionBase):
 
     def __init__(self, readonly=False, timeout=10.00,
