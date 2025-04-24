@@ -84,6 +84,7 @@ class OMCSessionException(Exception):
     pass
 
 
+# noinspection PyPep8Naming
 class OMCSessionCmd:
 
     def __init__(self, session: OMCSessionZMQ, readonly: bool = False):
@@ -271,6 +272,7 @@ class OMCSessionCmd:
         return self._ask(question='getClassNames', opt=opt)
 
 
+# noinspection PyPep8Naming
 class OMCSessionZMQ:
 
     def __init__(
