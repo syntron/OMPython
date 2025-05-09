@@ -343,7 +343,7 @@ class OMCSessionZMQ:
 
         return omc_log_file
 
-    def _start_omc_process(self, timeout):
+    def _start_omc_process(self, timeout):  # output?
         if sys.platform == 'win32':
             omhome_bin = (self._omhome / "bin").as_posix()
             my_env = os.environ.copy()
