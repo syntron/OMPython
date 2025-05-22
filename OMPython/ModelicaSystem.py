@@ -309,6 +309,8 @@ class ModelicaSystemCmd:
         return simargs
 
 
+# TODO: add PyUnresolvedReferences?
+# noinspection PyPep8Naming, PyUnresolvedReferences
 class ModelicaSystem:
     def __init__(
             self,
