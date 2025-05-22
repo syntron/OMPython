@@ -108,6 +108,8 @@ class LinearizationResult:
         return {0: self.A, 1: self.B, 2: self.C, 3: self.D}[index]
 
 
+# TODO: use PyUnresolvedReferences?
+# noinspection PyPep8Naming, PyUnresolvedReferences
 class ModelicaSystem:
     def __init__(
             self,
