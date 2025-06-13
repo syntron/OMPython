@@ -965,12 +965,8 @@ class OMCProcessWSL(OMCProcess):
     def _omc_process_get(self) -> subprocess.Popen:
         my_env = os.environ.copy()
 
-        omc_path = 'omc'
-        if self._omhome is not None:
-            omc_path = f"{self._omhome}/{omc_path}"
-
         omc_command = self._wsl_cmd + [
-            omc_path,
+            self._wsl_omc,
             "--locale=C",
             "--interactive=zmq",
             f"-z={self._random_string}"]
