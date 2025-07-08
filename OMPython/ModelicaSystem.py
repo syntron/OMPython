@@ -137,7 +137,7 @@ class ModelicaSystemCmd:
             Convert a value for 'override' to a string taking into account differences between Modelica and Python.
             """
             if isinstance(oval, str):
-                oval_str = f"\"{oval.strip()}\""
+                oval_str = f"\"{oval.strip()}\""  # TODO: use shlex.quote()?
             elif isinstance(oval, bool):
                 oval_str = 'true' if oval else 'false'
             elif isinstance(oval, numbers.Number):
