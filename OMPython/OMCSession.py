@@ -412,6 +412,25 @@ class OMCPathReal(pathlib.PurePosixPath):
 
         raise OMCSessionException(f"Error reading file size for path {self.as_posix()}!")
 
+    def copy(self, dst: OMCPath, overwrite_ok: bool = False) -> OMCPath:
+        """
+        Copy a (binary) file.
+        """
+        if not isinstance(dst, OMCPath):
+            raise OMCSessionException("Destination must be an OMCPath object!")
+
+        if dst.is_dir():
+            dst /= self.name
+
+        if dst.is_file() and not overwrite_ok:
+            raise OMCSessionException(f"Not overwriting file {dst.as_posix()} "
+                                      "- use overwrite_ok=True to force the operation!")
+
+        if not self._session.sendExpression(f'copy("{self.as_posix()}", "{dst.as_posix()}")'):
+            raise OMCSessionException(f"Could not copy {self.as_posix()} to {dst.as_posix()}!")
+
+        return OMCPath(dst.as_posix(), session=self._session)
+
 
 if sys.version_info < (3, 12):
 
@@ -440,6 +459,24 @@ if sys.version_info < (3, 12):
             Needed compatibility function to have the same interface as OMCPathReal
             """
             return self.stat().st_size
+
+        def copy(self, dst: OMCPath, overwrite_ok: bool = False) -> bool:
+            """
+            Copy a (binary) file.
+            """
+            if not isinstance(dst, OMCPath):
+                raise OMCSessionException("Destination must be an OMCPath object!")
+
+            if dst.is_dir():
+                dst /= self.name
+
+            if dst.is_file() and not overwrite_ok:
+                raise OMCSessionException(f"Not overwriting file {dst.as_posix()} "
+                                          "- use overwrite_ok=True to force the operation!")
+
+            dst.write_bytes(self.read_bytes())
+
+            return dst.is_file()
 
     class OMCPathCompatibilityPosix(pathlib.PosixPath, OMCPathCompatibility):
         pass
