@@ -275,7 +275,7 @@ class OMCSessionCmd:
         return self._ask(question='getClassNames', opt=opt)
 
 
-class OMCPathReal(pathlib.PurePosixPath):
+class OMCPath(pathlib.PurePosixPath):
     """
     Implementation of a basic (PurePosix)Path object which uses OMC as backend. The connection to OMC is provided via a
     OMCSessionZMQ session object.
@@ -441,46 +441,6 @@ class OMCPathReal(pathlib.PurePosixPath):
                                   "use size() to get the file size.")
 
 
-if sys.version_info < (3, 12):
-
-    class OMCPathCompatibility(pathlib.Path):
-        """
-        Compatibility class for OMCPath in Python < 3.12. This allows to run all code which uses OMCPath (mainly
-        ModelicaSystem) on these Python versions. There is one remaining limitation: only OMCProcessLocal will work as
-        OMCPathCompatibility is based on the standard pathlib.Path implementation.
-        """
-
-        # modified copy of pathlib.Path.__new__() definition
-        def __new__(cls, *args, **kwargs):
-            logger.warning("Python < 3.12 - using a version of class OMCPath "
-                           "based on pathlib.Path for local usage only.")
-
-            if cls is OMCPathCompatibility:
-                cls = OMCPathCompatibilityWindows if os.name == 'nt' else OMCPathCompatibilityPosix
-            self = cls._from_parts(args)
-            if not self._flavour.is_supported:
-                raise NotImplementedError("cannot instantiate %r on your system"
-                                          % (cls.__name__,))
-            return self
-
-        def size(self) -> int:
-            """
-            Needed compatibility function to have the same interface as OMCPathReal
-            """
-            return self.stat().st_size
-
-    class OMCPathCompatibilityPosix(pathlib.PosixPath, OMCPathCompatibility):
-        pass
-
-    class OMCPathCompatibilityWindows(pathlib.WindowsPath, OMCPathCompatibility):
-        pass
-
-    OMCPath = OMCPathCompatibility
-
-else:
-    OMCPath = OMCPathReal
-
-
 @dataclasses.dataclass
 class OMCSessionRunData:
     """
@@ -587,16 +547,7 @@ class OMCSessionZMQ:
         """
         Create an OMCPath object based on the given path segments and the current OMC session.
         """
-
-        # fallback solution for Python < 3.12; a modified pathlib.Path object is used as OMCPath replacement
-        if sys.version_info < (3, 12):
-            if isinstance(self.omc_process, OMCProcessLocal):
-                # noinspection PyArgumentList
-                return OMCPath(*path)
-            else:
-                raise OMCSessionException("OMCPath is supported for Python < 3.12 only if OMCProcessLocal is used!")
-        else:
-            return OMCPath(*path, session=self)
+        return OMCPath(*path, session=self)
 
     def omcpath_tempdir(self, tempdir_base: Optional[OMCPath] = None) -> OMCPath:
         """
@@ -606,11 +557,7 @@ class OMCSessionZMQ:
         names = [str(uuid.uuid4()) for _ in range(100)]
 
         if tempdir_base is None:
-            # fallback solution for Python < 3.12; a modified pathlib.Path object is used as OMCPath replacement
-            if sys.version_info < (3, 12):
-                tempdir_str = tempfile.gettempdir()
-            else:
-                tempdir_str = self.sendExpression("getTempDirectoryPath()")
+            tempdir_str = self.sendExpression("getTempDirectoryPath()")
             tempdir_base = self.omcpath(tempdir_str)
 
         tempdir: Optional[OMCPath] = None
