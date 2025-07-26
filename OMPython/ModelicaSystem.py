@@ -208,7 +208,7 @@ class ModelicaSystemCmd:
             cmd_timeout=self._timeout,
         )
 
-        omc_run_data_updated = self._session.omc_run_data_update(omc_run_data, session=self._session)
+        omc_run_data_updated = self._session.omc_run_data_update(omc_run_data)
 
         return omc_run_data_updated
 
