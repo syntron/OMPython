@@ -415,6 +415,8 @@ class OMCPathReal(pathlib.PurePosixPath):
     def copy(self, dst: OMCPath, overwrite_ok: bool = False) -> OMCPath:
         """
         Copy a (binary) file.
+
+        Limitation due to OMC: file flags (like the binary bit on Linux) are not preseerved.
         """
         if not isinstance(dst, OMCPath):
             raise OMCSessionException("Destination must be an OMCPath object!")
