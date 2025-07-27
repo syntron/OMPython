@@ -433,9 +433,6 @@ class ModelicaSystem:
         return self._work_dir
 
     def buildModel(self, variableFilter: Optional[str] = None):
-        """
-        Build the model executable.
-        """
         if variableFilter is not None:
             self._variable_filter = variableFilter
 
@@ -447,11 +444,7 @@ class ModelicaSystem:
         buildModelResult = self._requestApi("buildModel", self._model_name, properties=varFilter)
         logger.debug("OM model build result: %s", buildModelResult)
 
-        model_executable = self._getconn.omcpath(buildModelResult[0])
-        if not model_executable.is_file():
-            raise ModelicaSystemError(f"Missing model executable after buildModel(): {model_executable.as_posix()}")
-
-        xml_file = model_executable.parent / buildModelResult[1]
+        xml_file = self._getconn.omcpath(buildModelResult[0]).parent / buildModelResult[1]
         self._xmlparse(xml_file=xml_file)
 
     def sendExpression(self, expr: str, parsed: bool = True):
