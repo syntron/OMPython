@@ -58,6 +58,35 @@ def test_setParameters():
         mod.getParameters(["g", "thisParameterDoesNotExist"])
 
 
+def test_setParameter():
+    omc = OMPython.OMCSessionZMQ()
+    model_path = omc.sendExpression("getInstallationDirectoryPath()") + "/share/doc/omc/testmodels/"
+    mod = OMPython.ModelicaSystem(model_path + "BouncingBall.mo", "BouncingBall")
+
+    # method 1
+    mod.setParameter(e=1.234)
+    mod.setParameter(g=321.0)
+    assert mod.getParameters("e") == ["1.234"]
+    assert mod.getParameters("g") == ["321.0"]
+    assert mod.getParameters() == {
+        "e": "1.234",
+        "g": "321.0",
+    }
+    with pytest.raises(KeyError):
+        mod.getParameters("thisParameterDoesNotExist")
+
+    # method 2
+    mod.setParameter(e=21.3, g=0.12)
+    assert mod.getParameters() == {
+        "e": "21.3",
+        "g": "0.12",
+    }
+    assert mod.getParameters(["e", "g"]) == ["21.3", "0.12"]
+    assert mod.getParameters(["g", "e"]) == ["0.12", "21.3"]
+    with pytest.raises(KeyError):
+        mod.getParameters(["g", "thisParameterDoesNotExist"])
+
+
 def test_setSimulationOptions():
     omc = OMPython.OMCSessionZMQ()
     model_path = omc.sendExpression("getInstallationDirectoryPath()") + "/share/doc/omc/testmodels/"
