@@ -1268,6 +1268,15 @@ class ModelicaSystem:
             datatype="parameter",
             overwritedata=self._override_variables)
 
+    def setParameter(
+            self,
+            **kwargs,
+    ) -> bool:
+        """
+        Simple wrapper for setParameters() which implements a natural way to set parameters via name=val syntax.
+        """
+        return self.setParameters(pvals=kwargs)
+
     def setSimulationOptions(
             self,
             simOptions: str | list[str] | dict[str, Any],
