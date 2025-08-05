@@ -1361,7 +1361,8 @@ class OMCProcessWSL(OMCProcess):
         # connect to the running omc instance using ZMQ
         self._omc_port = self._omc_port_get()
 
-    def _wsl_cmd(self, wsl_cwd: Optional[str] = None) -> list[str]:        # get wsl base command
+    def _wsl_cmd(self, wsl_cwd: Optional[str] = None) -> list[str]:
+        # get wsl base command
         wsl_cmd = ['wsl']
         if isinstance(self._wsl_distribution, str):
             wsl_cmd += ['--distribution', self._wsl_distribution]
