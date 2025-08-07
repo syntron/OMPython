@@ -451,12 +451,12 @@ class ModelicaSystem:
             modelname=self._model_name,
             timeout=5.0,
         )
-        # ... and outputs help for command help
+        # ... by running it - output help for command help
         om_cmd.arg_set(key="help", val="help")
         cmd_definition = om_cmd.definition()
         returncode = self._getconn.run_model_executable(cmd_run_data=cmd_definition)
         if returncode != 0:
-            raise ModelicaSystemError("Error on model executable test!")
+            raise ModelicaSystemError("Model executable not working!")
 
         xml_file = self._getconn.omcpath(buildModelResult[0]).parent / buildModelResult[1]
         self._xmlparse(xml_file=xml_file)
