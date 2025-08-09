@@ -1928,8 +1928,9 @@ class ModelicaSystemDoE:
                                       f"and simulation definitions ({doe_def_total}).")
 
         doe_task_query: queue.Queue = queue.Queue()
-        for doe_cmd in self._doe_cmd.values():
-            doe_task_query.put(doe_cmd)
+        if self._doe_cmd is not None:
+            for doe_cmd in self._doe_cmd.values():
+                doe_task_query.put(doe_cmd)
 
         if not isinstance(self._doe_def, dict) or len(self._doe_def) == 0:
             raise ModelicaSystemError("Missing Doe Summary!")
