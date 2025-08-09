@@ -382,7 +382,11 @@ class ModelicaSystem:
 
         self._lmodel = lmodel  # may be needed if model is derived from other model
         self._model_name = modelName  # Model class name
-        self._file_name: Optional[OMCPath] = self._getconn.omcpath(fileName).resolve() if fileName is not None else None  # Model file/package name
+        if fileName is not None:
+            file_name = self._getconn.omcpath(fileName).resolve()
+        else:
+            file_name = None
+        self._file_name: Optional[OMCPath] = file_name  # Model file/package name
         self._simulated = False  # True if the model has already been simulated
         self._result_file: Optional[OMCPath] = None  # for storing result file
         self._variable_filter = variableFilter
