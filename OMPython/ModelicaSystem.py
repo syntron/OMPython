@@ -261,7 +261,7 @@ class ModelicaSystem:
             variableFilter: Optional[str] = None,
             customBuildDirectory: Optional[str | os.PathLike] = None,
             omhome: Optional[str] = None,
-            omc_process: Optional[OMCProcessLocal] = None,
+            omc_process: Optional[OMCProcess] = None,
             build: bool = True,
     ) -> None:
         """Initialize, load and build a model.
