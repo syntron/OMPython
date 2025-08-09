@@ -47,7 +47,9 @@ from typing import Any, Optional
 import warnings
 import xml.etree.ElementTree as ET
 
-from OMPython.OMCSession import OMCSessionException, OMCSessionRunData, OMCSessionZMQ, OMCProcessLocal, OMCPath
+from OMPython.OMCSession import (OMCSessionException, OMCSessionRunData, OMCSessionZMQ,
+                                 OMCProcess, OMCProcessLocal,
+                                 OMCPath)
 
 # define logger using the current module name as ID
 logger = logging.getLogger(__name__)
@@ -278,7 +280,7 @@ class ModelicaSystem:
             variableFilter: Optional[str] = None,
             customBuildDirectory: Optional[str | os.PathLike] = None,
             omhome: Optional[str] = None,
-            omc_process: Optional[OMCProcessLocal] = None,
+            omc_process: Optional[OMCProcess] = None,
             build: bool = True,
     ) -> None:
         """Initialize, load and build a model.
