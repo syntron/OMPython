@@ -38,7 +38,6 @@ import itertools
 import logging
 import numbers
 import os
-import pathlib
 import queue
 import textwrap
 import threading
@@ -49,8 +48,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 from OMPython.OMCSession import (OMCSessionException, OMCSessionRunData, OMCSessionZMQ,
-                                 OMCProcess, OMCProcessLocal,
-                                 OMCPath)
+                                 OMCProcess, OMCPath)
 
 # define logger using the current module name as ID
 logger = logging.getLogger(__name__)
