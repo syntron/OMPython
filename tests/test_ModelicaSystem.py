@@ -58,9 +58,9 @@ def test_setParameters():
         model_name="BouncingBall",
     )
 
-    # method 1 (test depreciated variants)
-    mod.setParameters("e=1.234")
-    mod.setParameters(["g=321.0"])
+    # method 1 (as kwarg)
+    mod.setParameters(e=1.234)
+    mod.setParameters(g=321.0)
     assert mod.getParameters("e") == ["1.234"]
     assert mod.getParameters("g") == ["321.0"]
     assert mod.getParameters() == {
@@ -70,7 +70,7 @@ def test_setParameters():
     with pytest.raises(KeyError):
         mod.getParameters("thisParameterDoesNotExist")
 
-    # method 2 (new style)
+    # method 2 (as **kwarg)
     pvals = {"e": 21.3, "g": 0.12}
     mod.setParameters(**pvals)
     assert mod.getParameters() == {
