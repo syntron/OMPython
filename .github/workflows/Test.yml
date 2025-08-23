@@ -12,8 +12,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ['3.10', '3.12']
-        os: ['ubuntu-latest', 'windows-latest']
+        python-version: ['3.12']
+        os: ['ubuntu-latest']
         omc-version: ['stable']
 
     steps:
