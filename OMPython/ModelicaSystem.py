@@ -1685,7 +1685,7 @@ class ModelicaSystem:
             raise ModelicaSystemError(f"Missing FMU file: {fmu_path.as_posix()}")
 
         filename = self._requestApi(apiName='importFMU', entity=fmu_path.as_posix())
-        filepath = self._work_dir / filename
+        filepath = self._getconn.omcpath(filename)
 
         # report proper error message
         if not filepath.is_file():
