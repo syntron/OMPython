@@ -13,6 +13,13 @@ def test_CauerLowPassAnalog():
     try:
         fmu = mod.convertMo2Fmu(fileNamePrefix="CauerLowPassAnalog")
         assert os.path.exists(fmu)
+
+        # TODO: check if solution is identical to original simulation?!
+        mod2 = OMPython.ModelicaSystem()
+        mod2.convertFmu2Mo(
+            fmu=fmu,
+        )
+
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -27,5 +34,12 @@ def test_DrumBoiler():
     try:
         fmu = mod.convertMo2Fmu(fileNamePrefix="DrumBoiler")
         assert os.path.exists(fmu)
+
+        # TODO: check if solution is identical to original simulation?!
+        mod2 = OMPython.ModelicaSystem()
+        mod2.convertFmu2Mo(
+            fmu=fmu,
+        )
+
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
