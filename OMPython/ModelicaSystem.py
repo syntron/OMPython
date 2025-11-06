@@ -15,7 +15,6 @@ import re
 import textwrap
 import threading
 from typing import Any, cast, Optional
-import warnings
 import xml.etree.ElementTree as ET
 
 import numpy as np
