@@ -60,7 +60,8 @@ reports = true
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = [
-    'C0116', # Missing function or method docstring (missing-function-docstring)
+    # 'C0103', # Variable name doesn't conform to snake_case naming style (invalid-name)
+    # 'C0116', # Missing function or method docstring (missing-function-docstring)
     'C0302', # Too many lines in module (too-many-lines)
     'R0902', # Too many instance attributes (too-many-instance-attributes)
     'R0912', # Too many branches (too-many-branches)
@@ -69,5 +70,5 @@ disable = [
     'R0915', # Too many statements (too-many-statements)
     'R0917', # Too many positional arguments (too-many-positional-arguments)
     'W0613', # Unused argument (unused-argument)
-    'W1203', # Use lazy % formatting in logging functions (logging-fstring-interpolation)
+    # 'W1203', # Use lazy % formatting in logging functions (logging-fstring-interpolation)
 ]
