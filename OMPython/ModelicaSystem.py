@@ -38,6 +38,7 @@ import itertools
 import logging
 import numbers
 import os
+import pathlib
 import queue
 import textwrap
 import threading
@@ -450,18 +451,30 @@ class ModelicaSystem:
         # set variables
         self._model_name = name  # Model class name
         self._libraries = libraries  # may be needed if model is derived from other model
-        if file is not None:
-            file_name = self._session.omcpath(file).resolve()
-        else:
-            file_name = None
-        self._file_name = file_name  # Model file/package name
         self._variable_filter = variable_filter
-
-        if self._file_name is not None and not self._file_name.is_file():  # if file does not exist
-            raise IOError(f"{self._file_name} does not exist!")
 
         if self._libraries:
             self._loadLibrary(libraries=self._libraries)
+
+        self._file_name = None
+        if file is not None:
+            file_path = pathlib.Path(file)
+            # special handling for OMCProcessLocal - consider a relative path
+            if isinstance(self._session.omc_process, OMCProcessLocal) and not file_path.is_absolute():
+                file_path = pathlib.Path.cwd() / file_path
+            if not file_path.is_file():
+                raise IOError(f"Model file {file_path} does not exist!")
+
+            self._file_name = self.getWorkDirectory() / file_path.name
+            if (isinstance(self._session.omc_process, OMCProcessLocal)
+                    and file_path.as_posix() == self._file_name.as_posix()):
+                pass
+            elif self._file_name.is_file():
+                raise IOError(f"Simulation model file {self._file_name} exist - not overwriting!")
+            else:
+                content = file_path.read_text(encoding='utf-8')
+                self._file_name.write_text(content)
+
         if self._file_name is not None:
             self._loadFile(fileName=self._file_name)
 
@@ -1635,7 +1648,7 @@ class ModelicaSystem:
             fmuType: str = "me_cs",
             fileNamePrefix: Optional[str] = None,
             includeResources: bool = True,
-    ) -> str:
+    ) -> OMCPath:
         """Translate the model into a Functional Mockup Unit.
 
         Args:
@@ -1662,15 +1675,19 @@ class ModelicaSystem:
         properties = (f'version="{version}", fmuType="{fmuType}", '
                       f'fileNamePrefix="{fileNamePrefix}", includeResources={includeResourcesStr}')
         fmu = self._requestApi(apiName='buildModelFMU', entity=self._model_name, properties=properties)
+        fmu_path = self._session.omcpath(fmu)
 
         # report proper error message
-        if not os.path.exists(fmu):
-            raise ModelicaSystemError(f"Missing FMU file: {fmu}")
+        if not fmu_path.is_file():
+            raise ModelicaSystemError(f"Missing FMU file: {fmu_path.as_posix()}")
 
-        return fmu
+        return fmu_path
 
     # to convert FMU to Modelica model
-    def convertFmu2Mo(self, fmuName):  # 20
+    def convertFmu2Mo(
+            self,
+            fmu: os.PathLike,
+    ) -> OMCPath:
         """
         In order to load FMU, at first it needs to be translated into Modelica model. This method is used to generate
         Modelica model from the given FMU. It generates "fmuName_me_FMU.mo".
@@ -1679,13 +1696,24 @@ class ModelicaSystem:
         >>> convertFmu2Mo("c:/BouncingBall.Fmu")
         """
 
-        fileName = self._requestApi(apiName='importFMU', entity=fmuName)
+        fmu_path = self._session.omcpath(fmu)
+
+        if not fmu_path.is_file():
+            raise ModelicaSystemError(f"Missing FMU file: {fmu_path.as_posix()}")
+
+        filename = self._requestApi(apiName='importFMU', entity=fmu_path.as_posix())
+        filepath = self.getWorkDirectory() / filename
 
         # report proper error message
-        if not os.path.exists(fileName):
-            raise ModelicaSystemError(f"Missing file {fileName}")
+        if not filepath.is_file():
+            raise ModelicaSystemError(f"Missing file {filepath.as_posix()}")
 
-        return fileName
+        self.model(
+            name=f"{fmu_path.stem}_me_FMU",
+            file=filepath,
+        )
+
+        return filepath
 
     def optimize(self) -> dict[str, Any]:
         """Perform model-based optimization.
