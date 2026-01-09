@@ -17,7 +17,6 @@ from OMPython.ModelicaSystem import (
 from OMPython.OMCSession import (
     OMCPath,
     OMCSession,
-    OMCSessionCmd,
     OMCSessionException,
     OMCSessionRunData,
     OMCSessionZMQ,
@@ -39,7 +38,6 @@ __all__ = [
     'OMCPath',
 
     'OMCSession',
-    'OMCSessionCmd',
     'OMCSessionException',
     'OMCSessionRunData',
     'OMCSessionZMQ',
