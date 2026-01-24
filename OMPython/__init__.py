@@ -16,6 +16,7 @@ from OMPython.ModelicaSystem import (
 )
 from OMPython.OMCSession import (
     OMCPath,
+    OMCSession,
     OMCSessionCmd,
     OMCSessionDocker,
     OMCSessionDockerContainer,
@@ -38,6 +39,7 @@ __all__ = [
 
     'OMCPath',
 
+    'OMCSession',
     'OMCSessionCmd',
     'OMCSessionDocker',
     'OMCSessionDockerContainer',
