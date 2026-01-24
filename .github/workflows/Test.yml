@@ -18,7 +18,7 @@ jobs:
         # * Python 3.10 - oldest supported version
         # * Python 3.12 - changes in OMCSession / OMCPath
         # * Python 3.14 - latest Python version
-        python-version: ['3.13]
+        python-version: ['3.13']
         # * Linux using ubuntu-latest
         # * Windows using windows-latest
         os: ['ubuntu-latest', 'windows-latest']
