@@ -25,7 +25,6 @@ from OMPython.OMCSession import (
     OMCSessionPort,
     OMCSessionRunData,
     OMCSessionWSL,
-    OMCSessionZMQ,
 )
 
 # global names imported if import 'from OMPython import *' is used
@@ -48,5 +47,4 @@ __all__ = [
     'OMCSessionLocal',
     'OMCSessionRunData',
     'OMCSessionWSL',
-    'OMCSessionZMQ',
 ]
