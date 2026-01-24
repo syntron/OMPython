@@ -391,7 +391,8 @@ class ModelicaSystem:
             self._session = OMCSessionLocal(omhome=omhome)
 
         # get OpenModelica version
-        self._version = self._session.get_version()
+        version_str = self._session.get_version()
+        self._version = self.parse_om_version(version=version_str)
         # set commandLineOptions using default values or the user defined list
         if command_line_options is None:
             # set default command line options to improve the performance of linearization and to avoid recompilation if
@@ -1212,7 +1213,7 @@ class ModelicaSystem:
 
     def _process_override_data(
             self,
-            om_cmd: ModelicaSystemCmd,
+            om_cmd: ModelExecutionCmd,
             override_file: OMCPath,
             override_var: dict[str, str],
             override_sim: dict[str, str],

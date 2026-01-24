@@ -859,7 +859,6 @@ class OMCSession(metaclass=OMCSessionMeta):
 
         return tempdir
 
-
     def execute(self, command: str):
         warnings.warn(
             message="This function is depreciated and will be removed in future versions; "

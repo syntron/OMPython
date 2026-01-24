@@ -30,7 +30,6 @@ from OMPython.OMCSession import (
     OMCSessionException,
     OMCSessionLocal,
     OMCSessionPort,
-    OMCSessionRunData,
     OMCSessionWSL,
     OMCSessionZMQ,
 )
