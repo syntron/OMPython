@@ -14,6 +14,7 @@ omc.sendExpression("command")
 from OMPython.ModelicaSystem import (
     LinearizationResult,
     ModelicaSystem,
+    ModelicaSystemOMC,
     ModelExecutionCmd,
     ModelicaSystemDoE,
     ModelicaSystemError,
@@ -40,6 +41,7 @@ __all__ = [
     'ModelExecutionException',
 
     'ModelicaSystem',
+    'ModelicaSystemOMC',
     'ModelExecutionCmd',
     'ModelicaSystemDoE',
     'ModelicaSystemError',
