@@ -13,43 +13,71 @@ omc.sendExpression("command")
 
 from OMPython.ModelicaSystem import (
     LinearizationResult,
-    ModelicaSystem,
     ModelExecutionCmd,
-    ModelicaSystemDoE,
+
+    ModelicaSystemBase,
     ModelicaSystemError,
+    ModelicaSystemOMC,
+    ModelicaSystemDoE,
+    ModelicaSystemRunner,
 )
 from OMPython.OMCSession import (
     ModelExecutionData,
     ModelExecutionException,
 
-    OMCSessionCmd,
     OMCSessionException,
+
     OMCSessionZMQ,
-    OMCSessionPort,
-    OMCSessionLocal,
+
+    OMCPath,
+    OMCPathDummy,
+
+    OMCSession,
     OMCSessionDocker,
     OMCSessionDockerContainer,
+    OMCSessionDummy,
+    OMCSessionLocal,
+    OMCSessionPort,
     OMCSessionWSL,
+
+    OMCSessionCmd,
 )
+
+# compatibility layer
+ModelicaSystem = ModelicaSystemOMC
 
 # global names imported if import 'from OMPython import *' is used
 __all__ = [
     'LinearizationResult',
 
+    'ModelicaSystemBase',
     'ModelExecutionData',
     'ModelExecutionException',
 
-    'ModelicaSystem',
+    'ModelicaSystem',  # compatibility layer
     'ModelExecutionCmd',
     'ModelicaSystemDoE',
     'ModelicaSystemError',
+    'ModelicaSystemOMC',
+    'ModelicaSystemRunner',
 
-    'OMCSessionCmd',
+    'ModelExecutionCmd',
+    'ModelExecutionData',
+    'ModelExecutionException',
+
     'OMCSessionException',
-    'OMCSessionZMQ',
-    'OMCSessionPort',
-    'OMCSessionLocal',
+
+    'OMCPath',
+    'OMCPathDummy',
+
+    'OMCSessionCmd',  # obsolete
+    'OMCSessionZMQ',  # compatibility layer
+
+    'OMCSession',
     'OMCSessionDocker',
     'OMCSessionDockerContainer',
+    'OMCSessionDummy',
+    'OMCSessionLocal',
+    'OMCSessionPort',
     'OMCSessionWSL',
 ]

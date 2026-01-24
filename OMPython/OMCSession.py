@@ -255,7 +255,11 @@ class OMCSessionCmd:
         return self._ask(question='getClassNames', opt=opt)
 
 
-class OMCPathReal(pathlib.PurePosixPath):
+# TODO: define BasePath RunnerPath(BasePath)
+# TODO: define OMCPath(BasePath)
+# TODO: new file OMCSessionBase (BasePath / RunnerPathDummy; BaseSession / RunnerSession)
+# TODO: filenames as SessionBase / SessionRunner / SessionOMC
+class _OMCPath(pathlib.PurePosixPath):
     """
     Implementation of a basic (PurePosix)Path object which uses OMC as backend. The connection to OMC is provided via an
     instances of OMCSession* classes.
@@ -414,13 +418,89 @@ class OMCPathReal(pathlib.PurePosixPath):
         raise OMCSessionException(f"Error reading file size for path {self.as_posix()}!")
 
 
+class _OMCPathDummy(_OMCPath):
+    """
+    Implementation of OMCPath which does not use the session data but pathlib.Path. This is a fallback solution if
+    OMCPath should be used without the overhead of OMCsession*. This class is based on _OMCPath and, thus, on
+    pathlib.PurePosixPath. THis is working well but not the correct implementation on Windows systems. To get a
+    representation, use pathlib.Path(<OMCPathDummy>.as_posix()).
+    """
+
+    def _path(self) -> pathlib.Path:
+        return pathlib.Path(self.as_posix())
+
+    def is_file(self, *, follow_symlinks=True) -> bool:
+        """
+        Check if the path is a regular file.
+        """
+        return self._path().is_file()
+
+    def is_dir(self, *, follow_symlinks=True) -> bool:
+        """
+        Check if the path is a directory.
+        """
+        return self._path().is_dir()
+
+    def is_absolute(self):
+        """
+        Check if the path is an absolute path considering the possibility that we are running locally on Windows. This
+        case needs special handling as the definition of is_absolute() differs.
+        """
+        return self._path().is_absolute()
+
+    def read_text(self, encoding=None, errors=None, newline=None) -> str:
+        """
+        Read the content of the file represented by this path as text.
+
+        The additional arguments `encoding`, `errors` and `newline` are only defined for compatibility with Path()
+        definition.
+        """
+        return self._path().read_text(encoding='utf-8')
+
+    def write_text(self, data: str, encoding=None, errors=None, newline=None):
+        """
+        Write text data to the file represented by this path.
+
+        The additional arguments `encoding`, `errors`, and `newline` are only defined for compatibility with Path()
+        definitions.
+        """
+        return self._path().write_text(data=data, encoding='utf-8')
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a directory at the path represented by this OMCPath object.
+
+        The additional arguments `mode`, and `parents` are only defined for compatibility with Path() definitions.
+        """
+        return self._path().mkdir(exist_ok=exist_ok)
+
+    def cwd(self):
+        """
+        Returns the current working directory as an OMCPath object.
+        """
+        return self._path().cwd()
+
+    def unlink(self, missing_ok: bool = False) -> None:
+        """
+        Unlink (delete) the file or directory represented by this path.
+        """
+        return self._path().unlink(missing_ok=missing_ok)
+
+    def resolve(self, strict: bool = False):
+        """
+        Resolve the path to an absolute path. This is done based on available OMC functions.
+        """
+        path_resolved = self._path().resolve(strict=strict)
+        return type(self)(path_resolved, session=self._session)
+
+
 if sys.version_info < (3, 12):
 
-    class OMCPathCompatibility(pathlib.Path):
+    class _OMCPathCompatibility(pathlib.Path):
         """
         Compatibility class for OMCPath in Python < 3.12. This allows to run all code which uses OMCPath (mainly
         ModelicaSystem) on these Python versions. There is one remaining limitation: only OMCProcessLocal will work as
-        OMCPathCompatibility is based on the standard pathlib.Path implementation.
+        _OMCPathCompatibility is based on the standard pathlib.Path implementation.
         """
 
         # modified copy of pathlib.Path.__new__() definition
@@ -428,8 +508,8 @@ if sys.version_info < (3, 12):
             logger.warning("Python < 3.12 - using a version of class OMCPath "
                            "based on pathlib.Path for local usage only.")
 
-            if cls is OMCPathCompatibility:
-                cls = OMCPathCompatibilityWindows if os.name == 'nt' else OMCPathCompatibilityPosix
+            if cls is _OMCPathCompatibility:
+                cls = _OMCPathCompatibilityWindows if os.name == 'nt' else _OMCPathCompatibilityPosix
             self = cls._from_parts(args)
             if not self._flavour.is_supported:
                 raise NotImplementedError(f"cannot instantiate {cls.__name__} on your system")
@@ -441,20 +521,22 @@ if sys.version_info < (3, 12):
             """
             return self.stat().st_size
 
-    class OMCPathCompatibilityPosix(pathlib.PosixPath, OMCPathCompatibility):
+    class _OMCPathCompatibilityPosix(pathlib.PosixPath, _OMCPathCompatibility):
         """
         Compatibility class for OMCPath on Posix systems (Python < 3.12)
         """
 
-    class OMCPathCompatibilityWindows(pathlib.WindowsPath, OMCPathCompatibility):
+    class _OMCPathCompatibilityWindows(pathlib.WindowsPath, _OMCPathCompatibility):
         """
         Compatibility class for OMCPath on Windows systems (Python < 3.12)
         """
 
-    OMCPath = OMCPathCompatibility
+    OMCPath = _OMCPathCompatibility
+    OMCPathDummy = _OMCPathCompatibility
 
 else:
-    OMCPath = OMCPathReal
+    OMCPath = _OMCPath
+    OMCPathDummy = _OMCPathDummy
 
 
 class ModelExecutionException(Exception):
@@ -540,6 +622,8 @@ class ModelExecutionData:
 
         return returncode
 
+
+# TODO: OMCSessionCMd => separate file; based on OMCSessionZMQ?
 
 class OMCSessionZMQ:
     """
@@ -629,6 +713,8 @@ class PostInitCaller(type):
         return obj
 
 
+# TODO: define BaseSession / RunnerSession(BaseSession)
+# TODO: define OMCSession(BaseSession)
 class OMCSessionMeta(abc.ABCMeta, PostInitCaller):
     """
     Helper class to get a combined metaclass of ABCMeta and PostInitCaller.
@@ -759,7 +845,6 @@ class OMCSession(metaclass=OMCSessionMeta):
         """
         Helper function which returns a command prefix needed for docker and WSL. It defaults to an empty list.
         """
-
         return []
 
     def get_version(self) -> str:
@@ -1009,6 +1094,59 @@ class OMCSession(metaclass=OMCSessionMeta):
         return portfile_path
 
 
+class OMCSessionDummy(OMCSession):
+    """
+    Dummy OMCSession implementation without any use of an OMC server.
+    """
+
+    def __init__(
+            self,
+            timeout: float = 10.00,
+            version: str = "1.27.0"
+    ) -> None:
+        super().__init__(timeout=timeout)
+        self.model_execution_local = True
+        self._version = version
+
+    def __post_init__(self) -> None:
+        """
+        No connection to an OMC server is created by this class!
+        """
+
+    def get_version(self) -> str:
+        """
+        We can not provide an OM version as we are not link to an OMC server. Thus, the provided version string is used
+        directly.
+        """
+        return self._version
+
+    def set_workdir(self, workdir: OMCPath) -> None:
+        """
+        Set the workdir for this session.
+        """
+        os.chdir(workdir.as_posix())
+
+    def omcpath(self, *path) -> OMCPath:
+        """
+        Create an OMCPath object based on the given path segments and the current OMCSession* class.
+        """
+        return OMCPathDummy(*path, session=self)
+
+    def omcpath_tempdir(self, tempdir_base: Optional[OMCPath] = None) -> OMCPath:
+        """
+        Get a temporary directory without using OMC.
+        """
+        if tempdir_base is None:
+            tempdir_str = tempfile.gettempdir()
+            tempdir_base = self.omcpath(tempdir_str)
+
+        return self._tempdir(tempdir_base=tempdir_base)
+
+    # TODO: remove? if based on OMSessionBase
+    def sendExpression(self, command: str, parsed: bool = True) -> Any:
+        raise OMCSessionException(f"{self.__class__.__name__} does not uses an OMC server!")
+
+
 class OMCSessionPort(OMCSession):
     """
     OMCSession implementation which uses a port to connect to an already running OMC server.
@@ -1017,8 +1155,9 @@ class OMCSessionPort(OMCSession):
     def __init__(
             self,
             omc_port: str,
+            timeout: float = 10.00,
     ) -> None:
-        super().__init__()
+        super().__init__(timeout=timeout)
         self._omc_port = omc_port
 
 
