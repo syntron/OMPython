@@ -21,15 +21,17 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 from OMPython.OMCSession import (
-    ModelExecutionData,
     ModelExecutionException,
-
-    OMCPath,
-    OMCSession,
-    OMCSessionDummy,
-    OMCSessionException,
+    ModelExecutionData,
+    PathBase,
+    SessionBase,
+    SessionRunner,
     OMCSessionLocal,
+    OMCSessionException,
 )
+
+OMCPath = PathBase
+OMCSession = SessionBase
 
 # define logger using the current module name as ID
 logger = logging.getLogger(__name__)
@@ -1665,8 +1667,6 @@ class ModelicaSystemOMC(ModelicaSystemBase):
     def sendExpression(self, expr: str, parsed: bool = True) -> Any:
         """
         Wrapper for OMCSession.sendExpression().
-
-        TODO: rename expr => command
         """
         try:
             retval = self._session.sendExpression(command=expr, parsed=parsed)
@@ -2244,8 +2244,6 @@ class ModelicaSystemDoE:
             build_dir.mkdir()
             self._mod.setWorkDirectory(work_directory=build_dir)
 
-            # TODO: check omc_mod
-
             sim_param_structure = {}
             for idx_structure, pk_structure in enumerate(param_structure.keys()):
                 sim_param_structure[pk_structure] = pc_structure[idx_structure]
@@ -2423,7 +2421,6 @@ class ModelicaSystemDoE:
     def get_doe_solutions(
             self,
             var_list: Optional[list] = None,
-            # TODO: omc_mod
     ) -> Optional[tuple[str] | dict[str, dict[str, np.ndarray]]]:
         """
         Get all solutions of the DoE run. The following return values are possible:
@@ -2452,8 +2449,6 @@ class ModelicaSystemDoE:
 
         if len(self._doe_def) == 0:
             raise ModelicaSystemError("No result files available - all simulations did fail?")
-
-        # TODO: check omc_mod
 
         sol_dict: dict[str, dict[str, Any]] = {}
         for resultfilename in self._doe_def:
@@ -2495,12 +2490,12 @@ class ModelicaSystemRunner(ModelicaSystemBase):
     def __init__(
             self,
             work_directory: Optional[str | os.PathLike] = None,
-            session: Optional[OMCSession] = None,
+            session: Optional[SessionBase] = None,
     ) -> None:
         if session is None:
-            session = OMCSessionDummy()
+            session = SessionRunner()
 
-        if not isinstance(session, OMCSessionDummy):
+        if not isinstance(session, SessionRunner):
             raise ModelicaSystemError("Only working if OMCsessionDummy is used!")
 
         super().__init__(

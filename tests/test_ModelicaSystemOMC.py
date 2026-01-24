@@ -38,7 +38,6 @@ def model_firstorder(tmp_path, model_firstorder_content):
     return mod
 
 
-@pytest.mark.skip("takes too long")
 def test_ModelicaSystem_loop(model_firstorder):
     def worker():
         mod = OMPython.ModelicaSystemOMC()
