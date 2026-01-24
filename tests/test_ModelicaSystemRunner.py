@@ -49,7 +49,7 @@ def test_runner(model_firstorder, param):
     _run_simulation(mod=mod, resultfile=resultfile_mod, param=param)
 
     # run the model using only the runner class
-    omcs = OMPython.OMCSessionDummy(
+    omcs = OMPython.SessionRunner(
         version=mod.get_session().get_version(),
     )
     modr = OMPython.ModelicaSystemRunner(

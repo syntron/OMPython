@@ -78,7 +78,6 @@ __all__ = [
     'OMCSession',
     'OMCSessionDocker',
     'OMCSessionDockerContainer',
-    'OMCSessionDummy',
     'OMCSessionLocal',
     'OMCSessionPort',
     'OMCSessionWSL',
