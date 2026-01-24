@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
 """
 OMPython is a Python interface to OpenModelica.
-To get started, create an OMCSessionZMQ object:
-from OMPython import OMCSessionZMQ
-omc = OMCSessionZMQ()
+To get started on a local OMC server, create an OMCSessionLocal object:
+
+```
+import OMPython
+omc = OMPython.OMCSessionLocal()
 omc.sendExpression("command")
+```
+
 """
 
 from OMPython.ModelicaSystem import (
     LinearizationResult,
     ModelicaSystem,
-    ModelicaSystemCmd,
+    ModelExecutionCmd,
     ModelicaSystemDoE,
     ModelicaSystemError,
 )
 from OMPython.OMCSession import (
+    ModelExecutionData,
+    ModelExecutionException,
+
     OMCPath,
     OMCSession,
     OMCSessionCmd,
@@ -32,8 +39,11 @@ from OMPython.OMCSession import (
 __all__ = [
     'LinearizationResult',
 
+    'ModelExecutionCmd',
+    'ModelExecutionData',
+    'ModelExecutionException',
+
     'ModelicaSystem',
-    'ModelicaSystemCmd',
     'ModelicaSystemDoE',
     'ModelicaSystemError',
 
@@ -46,7 +56,6 @@ __all__ = [
     'OMCSessionException',
     'OMCSessionPort',
     'OMCSessionLocal',
-    'OMCSessionRunData',
     'OMCSessionWSL',
     'OMCSessionZMQ',
 ]
