@@ -26,11 +26,13 @@ from OMPython.OMCSession import (
     ModelExecutionException,
 
     OMCSessionException,
-    OMCSession,
     OMCSessionLocal,
 
+    OMSessionABC,
     OMPathABC,
 )
+
+OMCSession = OMSessionABC
 
 # define logger using the current module name as ID
 logger = logging.getLogger(__name__)
