@@ -1030,7 +1030,7 @@ class ModelicaSystem:
         major, minor, patch = map(int, match.groups())
         return major, minor, patch
 
-    def simulate_cmd(
+    def _simulate_cmd(
             self,
             result_file: OMCPath,
             simflags: Optional[str] = None,
@@ -1155,7 +1155,7 @@ class ModelicaSystem:
         if not isinstance(self._result_file, OMCPath):
             raise ModelicaSystemError(f"Invalid result file path: {self._result_file} - must be an OMCPath object!")
 
-        om_cmd = self.simulate_cmd(
+        om_cmd = self._simulate_cmd(
             result_file=self._result_file,
             simflags=simflags,
             simargs=simargs,
@@ -2090,7 +2090,7 @@ class ModelicaSystemDoE:
                 )
 
                 self._mod.setParameters(sim_param_non_structural)
-                mscmd = self._mod.simulate_cmd(
+                mscmd = self._mod._simulate_cmd(
                     result_file=resultfile,
                 )
                 if self._simargs is not None:
