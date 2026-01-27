@@ -29,6 +29,8 @@ from OMPython.OMCSession import (
     ModelExecutionData,
     ModelExecutionException,
 
+    OMSessionRunner,
+
     OMCSessionCmd,
     OMCSessionException,
     OMCSessionZMQ,
@@ -57,6 +59,8 @@ __all__ = [
     'ModelicaDoERunner',
 
     'doe_get_solutions',
+
+    'OMSessionRunner',
 
     'OMCSessionCmd',
     'OMCSessionException',

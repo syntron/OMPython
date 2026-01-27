@@ -56,8 +56,20 @@ def test_ModelicaDoEOMC_local(tmp_path, model_doe, param_doe):
     resultfile_mod = mod.getWorkDirectory() / f"{mod.get_model_name()}_res_mod.mat"
     _run_simulation(mod=mod, resultfile=resultfile_mod, param=param_doe)
 
+    # run the model using only the runner class
+    omcs = OMPython.OMSessionRunner(
+        version=mod.get_session().get_version(),
+    )
+    modr = OMPython.ModelicaSystemRunner(
+        session=omcs,
+        work_directory=mod.getWorkDirectory(),
+    )
+    modr.setup(
+        model_name="M",
+    )
+
     doe_mod = OMPython.ModelicaDoERunner(
-        mod=mod,
+        mod=modr,
         parameters=param_doe,
         resultpath=tmpdir,
         simargs={"override": {'stopTime': '1.0'}},
