@@ -2666,5 +2666,8 @@ class ModelicaDoERunner(ModelicaDoEABC):
             pc_structure: Tuple,
             param_structure: dict[str, list[str] | list[int] | list[float]],
     ) -> dict[str, str | int | float]:
-        raise ModelicaSystemError(f"{self.__class__.__name__} can not handle structure parameters as it uses a "
-                                  "pre-compiled binary of model.")
+        if len(param_structure.keys()) > 0:
+            raise ModelicaSystemError(f"{self.__class__.__name__} can not handle structure parameters as it uses a "
+                                      "pre-compiled binary of model.")
+
+        return {}
