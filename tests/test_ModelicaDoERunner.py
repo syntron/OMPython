@@ -81,7 +81,7 @@ def test_ModelicaDoEOMC_local(tmp_path, model_doe, param_doe):
 
 
 def _run_simulation(mod, resultfile, param):
-    simOptions = {"stopTime": param['stopTime'], "stepSize": 0.1, "tolerance": 1e-8}
+    simOptions = {"stopTime": '1.0', "stepSize": 0.1, "tolerance": 1e-8}
     mod.setSimulationOptions(**simOptions)
     mod.simulate(resultfile=resultfile)
 
