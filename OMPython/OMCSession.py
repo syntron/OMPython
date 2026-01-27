@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Type
 import uuid
 import warnings
 
@@ -59,6 +59,7 @@ class DockerPopen:
             pass
 
 
+# TODO: rename OMSessionException
 class OMCSessionException(Exception):
     """
     Exception which is raised by any OMC* class.
@@ -270,7 +271,13 @@ class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
         super().__init__(*path)
         self._session = session
 
-    def with_segments(self, *pathsegments):
+    def get_session(self) -> OMSessionABC:
+        """
+        Get session definition used for this instance of OMPath.
+        """
+        return self._session
+
+    def with_segments(self, *pathsegments) -> OMPathABC:
         """
         Create a new OMCPath object with the given path segments.
 
@@ -291,7 +298,7 @@ class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def is_absolute(self):
+    def is_absolute(self) -> bool:
         """
         Check if the path is an absolute path.
         """
@@ -303,13 +310,13 @@ class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def write_text(self, data: str):
+    def write_text(self, data: str) -> int:
         """
         Write text data to the file represented by this path.
         """
 
     @abc.abstractmethod
-    def mkdir(self, parents: bool = True, exist_ok: bool = False):
+    def mkdir(self, parents: bool = True, exist_ok: bool = False) -> None:
         """
         Create a directory at the path represented by this class.
 
@@ -319,7 +326,7 @@ class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def cwd(self):
+    def cwd(self) -> OMPathABC:
         """
         Returns the current working directory as an OMPathBase object.
         """
@@ -331,12 +338,12 @@ class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def resolve(self, strict: bool = False):
+    def resolve(self, strict: bool = False) -> OMPathABC:
         """
         Resolve the path to an absolute path.
         """
 
-    def absolute(self):
+    def absolute(self) -> OMPathABC:
         """
         Resolve the path to an absolute path. Just a wrapper for resolve().
         """
@@ -373,13 +380,13 @@ class _OMCPath(OMPathABC):
         """
         return self._session.sendExpression(f'directoryExists("{self.as_posix()}")')
 
-    def is_absolute(self):
+    def is_absolute(self) -> bool:
         """
         Check if the path is an absolute path.
         """
         if isinstance(self._session, OMCSessionLocal) and platform.system() == 'Windows':
             return pathlib.PureWindowsPath(self.as_posix()).is_absolute()
-        return super().is_absolute()
+        return self.is_absolute()
 
     def read_text(self) -> str:
         """
@@ -387,19 +394,19 @@ class _OMCPath(OMPathABC):
         """
         return self._session.sendExpression(f'readFile("{self.as_posix()}")')
 
-    def write_text(self, data: str):
+    def write_text(self, data: str) -> int:
         """
         Write text data to the file represented by this path.
         """
         if not isinstance(data, str):
             raise TypeError(f"data must be str, not {data.__class__.__name__}")
 
-        data_omc = self._session.escape_str(data)
-        self._session.sendExpression(f'writeFile("{self.as_posix()}", "{data_omc}", false);')
+        data_escape = self._session.escape_str(data)
+        self._session.sendExpression(f'writeFile("{self.as_posix()}", "{data_escape}", false);')
 
         return len(data)
 
-    def mkdir(self, parents: bool = True, exist_ok: bool = False):
+    def mkdir(self, parents: bool = True, exist_ok: bool = False) -> None:
         """
         Create a directory at the path represented by this class.
 
@@ -410,14 +417,15 @@ class _OMCPath(OMPathABC):
         if self.is_dir() and not exist_ok:
             raise FileExistsError(f"Directory {self.as_posix()} already exists!")
 
-        return self._session.sendExpression(f'mkdir("{self.as_posix()}")')
+        if not self._session.sendExpression(f'mkdir("{self.as_posix()}")'):
+            raise OMCSessionException(f"Error on directory creation for {self.as_posix()}!")
 
-    def cwd(self):
+    def cwd(self) -> OMPathABC:
         """
         Returns the current working directory as an OMPathBase object.
         """
         cwd_str = self._session.sendExpression('cd()')
-        return OMCPath(cwd_str, session=self._session)
+        return self.__class__(cwd_str, session=self._session)
 
     def unlink(self, missing_ok: bool = False) -> None:
         """
@@ -427,7 +435,7 @@ class _OMCPath(OMPathABC):
         if not res and not missing_ok:
             raise FileNotFoundError(f"Cannot delete file {self.as_posix()} - it does not exists!")
 
-    def resolve(self, strict: bool = False):
+    def resolve(self, strict: bool = False) -> OMPathABC:
         """
         Resolve the path to an absolute path. This is done based on available OMC functions.
         """
@@ -608,6 +616,8 @@ class ModelExecutionData:
         return returncode
 
 
+# TODO: OMCSessionCMd => separate file; based on OMCSessionZMQ?
+
 class OMCSessionZMQ:
     """
     This class is a compatibility layer for the new schema using OMCSession* classes.
@@ -634,7 +644,8 @@ class OMCSessionZMQ:
         self.omc_process = omc_process
 
     def __del__(self):
-        del self.omc_process
+        if hasattr('omc_process', self):
+            del self.omc_process
 
     @staticmethod
     def escape_str(value: str) -> str:
@@ -696,6 +707,8 @@ class PostInitCaller(type):
         return obj
 
 
+# TODO: define BaseSession / RunnerSession(BaseSession)
+# TODO: define OMCSession(BaseSession)
 class OMSessionMeta(abc.ABCMeta, PostInitCaller):
     """
     Helper class to get a combined metaclass of ABCMeta and PostInitCaller.
@@ -705,6 +718,8 @@ class OMSessionMeta(abc.ABCMeta, PostInitCaller):
     """
 
 
+# TODO: check in __post_init__() if the OMPathABC instance is valid (OMC exist / bash exists / pathlib.Path is correct)
+#       define a OMPathABC.verify() function for this
 class OMSessionABC(metaclass=OMSessionMeta):
     """
     This class implements the basic structure a OMPython session definition needs. It provides the structure for an
@@ -726,11 +741,19 @@ class OMSessionABC(metaclass=OMSessionMeta):
 
         # store variables
         self._timeout = timeout
+        # command prefix (to be used for docker or WSL)
+        self._cmd_prefix: list[str] = []
 
     def __post_init__(self) -> None:
         """
         Post initialisation method.
         """
+
+    def get_cmd_prefix(self) -> list[str]:
+        """
+        Get session definition used for this instance of OMPath.
+        """
+        return self._cmd_prefix.copy()
 
     @staticmethod
     def escape_str(value: str) -> str:
@@ -824,13 +847,12 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
         """
         Initialisation for OMCSession
         """
+        super().__init__(timeout=timeout)
 
         # some helper data
         self.model_execution_windows = platform.system() == "Windows"
         self.model_execution_local = False
 
-        # store variables
-        self._timeout = timeout
         # generate a random string for this instance of OMC
         self._random_string = uuid.uuid4().hex
         # get a temporary directory
@@ -876,6 +898,9 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
         omc.connect(port)
 
         self._omc_zmq = omc
+
+    # TODO: define as abc.abstractmethod; fix in *Port
+    # def _omc_port_get(self) -> str:
 
     def __del__(self):
         if isinstance(self._omc_zmq, zmq.Socket):
@@ -1174,9 +1199,13 @@ class OMCSessionPort(OMCSessionABC):
     def __init__(
             self,
             omc_port: str,
+            timeout: float = 10.00,
     ) -> None:
-        super().__init__()
+        super().__init__(timeout=timeout)
         self._omc_port = omc_port
+
+    # TODO: add _omc_port_get()
+    # TODO: add _omc_port_test in OMCSessionABC => test / get version using sendExpression()
 
 
 class OMCSessionLocal(OMCSessionABC):
@@ -1272,7 +1301,7 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
 
     def __init__(
             self,
-            timeout: float = 10.00,
+            timeout: float = 10.0,
             dockerExtraArgs: Optional[list] = None,
             dockerOpenModelicaPath: str | os.PathLike = "omc",
             dockerNetwork: Optional[str] = None,
@@ -1291,6 +1320,8 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
 
         self._docker_container_id: Optional[str] = None
         self._docker_process: Optional[DockerPopen] = None
+
+        self._cmd_prefix = self.get_cmd_prefix()
 
     def _docker_process_get(self, docker_cid: str) -> Optional[DockerPopen]:
         if sys.platform == 'win32':
@@ -1360,6 +1391,14 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
 
         return port
 
+    # TODO: add as abc.abstractmethod? fix definition (cid)
+    # def _docker_omc_cmd(
+    #         self,
+    #         omc_path_and_args_list: list[str],
+    #         docker_cid_file: pathlib.Path,
+    # ) -> list:
+    # def _docker_omc_start(self) -> Tuple[subprocess.Popen, DockerPopen, str]:
+
     def get_server_address(self) -> Optional[str]:
         """
         Get the server address of the OMC server running in a Docker container.
@@ -1404,7 +1443,7 @@ class OMCSessionDocker(OMCSessionDockerABC):
     def __init__(
             self,
             timeout: float = 10.00,
-            docker: Optional[str] = None,
+            docker_image: Optional[str] = None,
             dockerExtraArgs: Optional[list] = None,
             dockerOpenModelicaPath: str | os.PathLike = "omc",
             dockerNetwork: Optional[str] = None,
@@ -1419,10 +1458,10 @@ class OMCSessionDocker(OMCSessionDockerABC):
             port=port,
         )
 
-        if docker is None:
+        if docker_image is None:
             raise OMCSessionException("Argument docker must be set!")
 
-        self._docker = docker
+        self._docker_image = docker_image
 
         # start up omc executable in docker container waiting for the ZMQ connection
         self._omc_process, self._docker_process, self._docker_container_id = self._docker_omc_start()
@@ -1458,7 +1497,7 @@ class OMCSessionDocker(OMCSessionDockerABC):
         if sys.platform == "win32":
             extra_flags = ["-d=zmqDangerousAcceptConnectionsFromAnywhere"]
             if not self._interactive_port:
-                raise OMCSessionException("docker on Windows requires knowing which port to connect to - "
+                raise OMCSessionException("Docker on Windows requires knowing which port to connect to - "
                                           "please set the interactivePort argument")
 
         if sys.platform == "win32":
@@ -1489,7 +1528,7 @@ class OMCSessionDocker(OMCSessionDockerABC):
                        ]
                        + self._docker_extra_args
                        + docker_network_str
-                       + [self._docker, self._docker_open_modelica_path.as_posix()]
+                       + [self._docker_image, self._docker_open_modelica_path.as_posix()]
                        + omc_path_and_args_list
                        + extra_flags)
 
@@ -1527,9 +1566,9 @@ class OMCSessionDocker(OMCSessionDockerABC):
             time.sleep(self._timeout / 40.0)
 
         if docker_cid is None:
-            logger.error(f"Docker did not start. Log-file says:\n{self.get_log()}")
             raise OMCSessionException(f"Docker did not start (timeout={self._timeout} might be too short "
-                                      "especially if you did not docker pull the image before this command).")
+                                      "especially if you did not docker pull the image before this command). "
+                                      f"Log-file says:\n{self.get_log()}")
 
         docker_process = self._docker_process_get(docker_cid=docker_cid)
         if docker_process is None:
@@ -1657,6 +1696,8 @@ class OMCSessionWSL(OMCSessionABC):
         # connect to the running omc instance using ZMQ
         self._omc_port = self._omc_port_get()
 
+        self._cmd_prefix = self.model_execution_prefix()
+
     def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
         """
         Helper function which returns a command prefix needed for docker and WSL. It defaults to an empty list.
@@ -1680,7 +1721,8 @@ class OMCSessionWSL(OMCSessionABC):
             self._wsl_omc,
             "--locale=C",
             "--interactive=zmq",
-            f"-z={self._random_string}"]
+            f"-z={self._random_string}",
+        ]
 
         omc_process = subprocess.Popen(omc_command,
                                        stdout=self._omc_loghandle,
@@ -1741,6 +1783,9 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
     via pathlib.Path(<OMCPathDummy>.as_posix()).
     """
 
+    def _path(self) -> pathlib.Path:
+        return pathlib.Path(self.as_posix())
+
     def is_file(self) -> bool:
         """
         Check if the path is a regular file.
@@ -1753,7 +1798,7 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
         """
         return self._path().is_dir()
 
-    def is_absolute(self):
+    def is_absolute(self) -> bool:
         """
         Check if the path is an absolute path.
         """
@@ -1771,7 +1816,7 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
         """
         return self._path().write_text(data=data, encoding='utf-8')
 
-    def mkdir(self, parents: bool = True, exist_ok: bool = False):
+    def mkdir(self, parents: bool = True, exist_ok: bool = False) -> None:
         """
         Create a directory at the path represented by this class.
 
@@ -1779,21 +1824,21 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
         Python < 3.12. In this case, pathlib.Path is used directly and this option ensures, that missing parent
         directories are also created.
         """
-        return self._path().mkdir(parents=parents, exist_ok=exist_ok)
+        self._path().mkdir(parents=parents, exist_ok=exist_ok)
 
-    def cwd(self):
+    def cwd(self) -> OMPathABC:
         """
         Returns the current working directory as an OMPathBase object.
         """
-        return self._path().cwd()
+        return type(self)(self._path().cwd().as_posix(), session=self._session)
 
     def unlink(self, missing_ok: bool = False) -> None:
         """
         Unlink (delete) the file or directory represented by this path.
         """
-        return self._path().unlink(missing_ok=missing_ok)
+        self._path().unlink(missing_ok=missing_ok)
 
-    def resolve(self, strict: bool = False):
+    def resolve(self, strict: bool = False) -> OMPathABC:
         """
         Resolve the path to an absolute path. This is done based on available OMC functions.
         """
@@ -1811,10 +1856,181 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
         return path.stat().st_size
 
 
+# TODO get_cmd_prefix()
+# TODO: used by WSL / docker
+# TODO: get cmd_prefix via OMSession.model_execution_prefix()
+class _OMPathRunnerBash(OMPathRunnerABC):
+    """
+    Implementation of OMPathBase which does not use the session data at all. Thus, this implementation can run locally
+    without any usage of OMC. The special case of this class is the usage of POSIX bash to run all the commands. Thus,
+    it can be used in WSL or docker.
+
+    This class is based on OMPathBase and, therefore, on pathlib.PurePosixPath. This is working well, but it is not the
+    correct implementation on Windows systems. To get a valid Windows representation of the path, use the conversion
+    via pathlib.Path(<OMCPathDummy>.as_posix()).
+    """
+
+    def is_file(self) -> bool:
+        """
+        Check if the path is a regular file.
+        """
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'test -f "{self.as_posix()}"']
+
+        try:
+            subprocess.run(cmdl, check=True)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def is_dir(self) -> bool:
+        """
+        Check if the path is a directory.
+        """
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'test -d "{self.as_posix()}"']
+
+        try:
+            subprocess.run(cmdl, check=True)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def is_absolute(self):
+        """
+        Check if the path is an absolute path.
+        """
+
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'case "{self.as_posix()}" in /*) exit 0;; *) exit 1;; esac']
+
+        try:
+            subprocess.check_call(cmdl)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def read_text(self) -> str:
+        """
+        Read the content of the file represented by this path as text.
+        """
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'cat "{self.as_posix()}"']
+
+        result = subprocess.run(cmdl, capture_output=True, check=True)
+        if result.returncode == 0:
+            return result.stdout.decode('utf-8')
+        raise FileNotFoundError(f"Cannot read file: {self.as_posix()}")
+
+    def write_text(self, data: str):
+        """
+        Write text data to the file represented by this path.
+        """
+        data_escape = self._session.escape_str(data)
+
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'printf %s "{data_escape}" > "{self.as_posix()}"']
+
+        try:
+            subprocess.run(cmdl, check=True)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def mkdir(self, parents: bool = True, exist_ok: bool = False) -> None:
+        """
+        Create a directory at the path represented by this class.
+
+        The argument parents with default value True exists to ensure compatibility with the fallback solution for
+        Python < 3.12. In this case, pathlib.Path is used directly and this option ensures, that missing parent
+        directories are also created.
+        """
+
+        if self.is_file():
+            raise OSError(f"The given path {self.as_posix()} exists and is a file!")
+        if self.is_dir() and not exist_ok:
+            raise OSError(f"The given path {self.as_posix()} exists and is a directory!")
+        if not parents and not self.parent.is_dir():
+            raise FileNotFoundError(f"Parent directory of {self.as_posix()} does not exists!")
+
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'mkdir -p "{self.as_posix()}"']
+
+        try:
+            subprocess.run(cmdl, check=True)
+        except subprocess.CalledProcessError as exc:
+            raise OMCSessionException(f"Error on directory creation for {self.as_posix()}!") from exc
+
+    def cwd(self) -> OMPathABC:
+        """
+        Returns the current working directory as an OMPathBase object.
+        """
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', 'pwd']
+
+        result = subprocess.run(cmdl, capture_output=True, text=True, check=True)
+        if result.returncode == 0:
+            return type(self)(result.stdout.strip(), session=self._session)
+        raise OSError("Can not get current work directory ...")
+
+    def unlink(self, missing_ok: bool = False) -> None:
+        """
+        Unlink (delete) the file or directory represented by this path.
+        """
+
+        if not self.is_file():
+            raise OSError(f"Can not unlink a directory: {self.as_posix()}!")
+
+        if not self.is_file():
+            return
+
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'rm "{self.as_posix()}"']
+
+        try:
+            subprocess.run(cmdl, check=True)
+        except subprocess.CalledProcessError as exc:
+            raise OSError(f"Cannot unlink file {self.as_posix()}: {exc}") from exc
+
+    def resolve(self, strict: bool = False) -> OMPathABC:
+        """
+        Resolve the path to an absolute path. This is done based on available OMC functions.
+        """
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'readlink -f "{self.as_posix()}"']
+
+        result = subprocess.run(cmdl, capture_output=True, text=True, check=True)
+        if result.returncode == 0:
+            return type(self)(result.stdout.strip(), session=self._session)
+        raise FileNotFoundError(f"Cannot resolve path: {self.as_posix()}")
+
+    def size(self) -> int:
+        """
+        Get the size of the file in bytes - implementation baseon on pathlib.Path.
+        """
+        if not self.is_file():
+            raise OMCSessionException(f"Path {self.as_posix()} is not a file!")
+
+        cmdl = self.get_session().get_cmd_prefix()
+        cmdl += ['bash', '-c', f'stat -c %s "{self.as_posix()}"']
+
+        result = subprocess.run(cmdl, capture_output=True, text=True, check=True)
+        stdout = result.stdout.strip()
+        if result.returncode == 0:
+            try:
+                return int(stdout)
+            except ValueError as exc:
+                raise OSError(f"Invalid return value for filesize ({self.as_posix()}): {stdout}") from exc
+        else:
+            raise OSError(f"Cannot get size for file {self.as_posix()}")
+
+
 if sys.version_info < (3, 12):
     OMPathRunnerLocal = OMPathCompatibility
+    OMPathRunnerBash = OMPathCompatibility
 else:
-    OMPathRunnerLocal = _OMPathRunnerLocal  # OMPathRunnerLocal
+    OMPathRunnerLocal = _OMPathRunnerLocal
+    OMPathRunnerBash = _OMPathRunnerBash
 
 
 class OMSessionRunner(OMSessionABC):
@@ -1825,11 +2041,20 @@ class OMSessionRunner(OMSessionABC):
     def __init__(
             self,
             timeout: float = 10.00,
-            version: str = "1.27.0"
+            version: str = "1.27.0",
+            cmd_prefix: Optional[list[str]] = None,
+            ompath_runner: Type[OMPathRunnerABC] = OMPathRunnerLocal,
     ) -> None:
         super().__init__(timeout=timeout)
         self.model_execution_local = True
         self._version = version
+
+        if not issubclass(ompath_runner, OMPathRunnerABC):
+            raise OMCSessionException(f"Invalid OMPathRunner class: {type(ompath_runner)}!")
+        self._ompath_runner = ompath_runner
+
+        if cmd_prefix is not None:
+            self._cmd_prefix = cmd_prefix
 
     def __post_init__(self) -> None:
         """
@@ -1859,7 +2084,7 @@ class OMSessionRunner(OMSessionABC):
         """
         Create an OMCPath object based on the given path segments and the current OMCSession* class.
         """
-        return OMPathRunnerLocal(*path, session=self)
+        return self._ompath_runner(*path, session=self)
 
     def omcpath_tempdir(self, tempdir_base: Optional[OMPathABC] = None) -> OMPathABC:
         """

@@ -22,16 +22,17 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 from OMPython.OMCSession import (
-    ModelExecutionData,
     ModelExecutionException,
-
-    OMCSessionException,
-    OMCSessionLocal,
-
+    ModelExecutionData,
+    OMPathABC,
     OMSessionABC,
     OMSessionRunner,
-    OMPathABC,
+    OMCSessionLocal,
+    OMCSessionException,
 )
+
+# check OMPathABC usage
+# check OMSessionABC usage
 
 # define logger using the current module name as ID
 logger = logging.getLogger(__name__)
@@ -2219,6 +2220,12 @@ class ModelicaDoEABC(metaclass=abc.ABCMeta):
         """
         return self._mod.get_session()
 
+    def get_resultpath(self) -> OMPathABC:
+        """
+        Get the path the the result data is saved.
+        """
+        return self._resultpath
+
     def prepare(self) -> int:
         """
         Prepare the DoE by evaluating the parameters. Each structural parameter requires a new instance of
@@ -2660,5 +2667,8 @@ class ModelicaDoERunner(ModelicaDoEABC):
             pc_structure: Tuple,
             param_structure: dict[str, list[str] | list[int] | list[float]],
     ) -> dict[str, str | int | float]:
-        raise ModelicaSystemError(f"{self.__class__.__name__} can not handle structure parameters as it uses a "
-                                  "pre-compiled binary of model.")
+        if len(param_structure.keys()) > 0:
+            raise ModelicaSystemError(f"{self.__class__.__name__} can not handle structure parameters as it uses a "
+                                      "pre-compiled binary of model.")
+
+        return {}

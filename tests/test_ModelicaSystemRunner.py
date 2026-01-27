@@ -37,7 +37,7 @@ def param():
     }
 
 
-def test_runner(model_firstorder, param):
+def test_ModelicaSystemRunner(model_firstorder, param):
     # create a model using ModelicaSystem
     mod = OMPython.ModelicaSystem()
     mod.model(
@@ -49,7 +49,7 @@ def test_runner(model_firstorder, param):
     _run_simulation(mod=mod, resultfile=resultfile_mod, param=param)
 
     # run the model using only the runner class
-    omcs = OMPython.SessionRunner(
+    omcs = OMPython.OMSessionRunner(
         version=mod.get_session().get_version(),
     )
     modr = OMPython.ModelicaSystemRunner(

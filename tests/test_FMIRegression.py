@@ -6,6 +6,7 @@ import os
 import OMPython
 
 
+# TODO: this checks OMC not OMPython, or? - needed, takes too long; move to separate workflow?
 def buildModelFMU(modelName):
     omc = OMPython.OMCSessionZMQ()
 
