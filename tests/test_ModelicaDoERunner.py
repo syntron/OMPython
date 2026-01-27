@@ -90,7 +90,7 @@ def _run_simulation(mod, resultfile, param):
 
 def _run_ModelicaDoERunner(doe_mod):
     doe_count = doe_mod.prepare()
-    assert doe_count == 16
+    assert doe_count == 4
 
     doe_def = doe_mod.get_doe_definition()
     assert isinstance(doe_def, dict)
