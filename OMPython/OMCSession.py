@@ -644,7 +644,7 @@ class OMCSessionZMQ:
         self.omc_process = omc_process
 
     def __del__(self):
-        if hasattr('omc_process', self):
+        if hasattr(self, 'omc_process'):
             del self.omc_process
 
     @staticmethod
@@ -2078,19 +2078,23 @@ class OMSessionRunner(OMSessionABC):
             self,
             timeout: float = 10.00,
             version: str = "1.27.0",
-            cmd_prefix: Optional[list[str]] = None,
             ompath_runner: Type[OMPathRunnerABC] = OMPathRunnerLocal,
+            cmd_prefix: Optional[list[str]] = None,
+            model_execution_local: bool = True,
     ) -> None:
         super().__init__(timeout=timeout)
-        self.model_execution_local = True
         self._version = version
 
         if not issubclass(ompath_runner, OMPathRunnerABC):
             raise OMCSessionException(f"Invalid OMPathRunner class: {type(ompath_runner)}!")
         self._ompath_runner = ompath_runner
 
+        self.model_execution_local = model_execution_local
         if cmd_prefix is not None:
             self._cmd_prefix = cmd_prefix
+
+        # TODO: some checking?!
+        # if ompath_runner == Type[OMPathRunnerBash]:
 
     def __post_init__(self) -> None:
         """
@@ -2101,7 +2105,7 @@ class OMSessionRunner(OMSessionABC):
         """
         Helper function which returns a command prefix.
         """
-        return []
+        return self.get_cmd_prefix()
 
     def get_version(self) -> str:
         """
@@ -2112,9 +2116,10 @@ class OMSessionRunner(OMSessionABC):
 
     def set_workdir(self, workdir: OMPathABC) -> None:
         """
-        Set the workdir for this session.
+        Set the workdir for this session. For OMSessionRunner this is a nop. The workdir must be defined within the
+        definition of cmd_prefix.
         """
-        os.chdir(workdir.as_posix())
+        pass
 
     def omcpath(self, *path) -> OMPathABC:
         """
