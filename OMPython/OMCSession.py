@@ -386,7 +386,7 @@ class _OMCPath(OMPathABC):
         """
         if isinstance(self._session, OMCSessionLocal) and platform.system() == 'Windows':
             return pathlib.PureWindowsPath(self.as_posix()).is_absolute()
-        return self.is_absolute()
+        return pathlib.PurePosixPath(self.as_posix()).is_absolute()
 
     def read_text(self) -> str:
         """
