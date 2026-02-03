@@ -79,6 +79,77 @@ def test_ModelicaSystemRunner(model_firstorder, param):
     _check_result(mod=mod, resultfile=resultfile_modr, param=param)
 
 
+def test_ModelicaSystemRunner_local(model_firstorder, param):
+    # create a model using ModelicaSystem
+    mod = OMPython.ModelicaSystemOMC()
+    mod.model(
+        model_file=model_firstorder,
+        model_name="M",
+    )
+
+    resultfile_mod = mod.getWorkDirectory() / f"{mod.get_model_name()}_res_mod.mat"
+    _run_simulation(mod=mod, resultfile=resultfile_mod, param=param)
+
+    # run the model using only the runner class
+    omcs = OMPython.OMSessionRunner(
+        version=mod.get_session().get_version(),
+        ompath_runner=OMPython.OMPathRunnerLocal,
+    )
+    modr = OMPython.ModelicaSystemRunner(
+        session=omcs,
+        work_directory=mod.getWorkDirectory(),
+    )
+    modr.setup(
+        model_name="M",
+    )
+
+    resultfile_modr = mod.getWorkDirectory() / f"{mod.get_model_name()}_res_modr.mat"
+    _run_simulation(mod=modr, resultfile=resultfile_modr, param=param)
+
+    # cannot check the content as runner does not have the capability to open a result file
+    assert resultfile_mod.size() == resultfile_modr.size()
+
+    # check results
+    _check_result(mod=mod, resultfile=resultfile_mod, param=param)
+    _check_result(mod=mod, resultfile=resultfile_modr, param=param)
+
+
+@skip_on_windows
+def test_ModelicaSystemRunner_bash(model_firstorder, param):
+    # create a model using ModelicaSystem
+    mod = OMPython.ModelicaSystemOMC()
+    mod.model(
+        model_file=model_firstorder,
+        model_name="M",
+    )
+
+    resultfile_mod = mod.getWorkDirectory() / f"{mod.get_model_name()}_res_mod.mat"
+    _run_simulation(mod=mod, resultfile=resultfile_mod, param=param)
+
+    # run the model using only the runner class
+    omcs = OMPython.OMSessionRunner(
+        version=mod.get_session().get_version(),
+        ompath_runner=OMPython.OMPathRunnerBash,
+    )
+    modr = OMPython.ModelicaSystemRunner(
+        session=omcs,
+        work_directory=mod.getWorkDirectory(),
+    )
+    modr.setup(
+        model_name="M",
+    )
+
+    resultfile_modr = mod.getWorkDirectory() / f"{mod.get_model_name()}_res_modr.mat"
+    _run_simulation(mod=modr, resultfile=resultfile_modr, param=param)
+
+    # cannot check the content as runner does not have the capability to open a result file
+    assert resultfile_mod.size() == resultfile_modr.size()
+
+    # check results
+    _check_result(mod=mod, resultfile=resultfile_mod, param=param)
+    _check_result(mod=mod, resultfile=resultfile_modr, param=param)
+
+
 @skip_on_windows
 def test_ModelicaSystemRunner_bash_docker(model_firstorder, param):
     omcp = OMPython.OMCSessionDocker(docker="openmodelica/openmodelica:v1.25.0-minimal")
