@@ -2119,7 +2119,6 @@ class OMSessionRunner(OMSessionABC):
         Set the workdir for this session. For OMSessionRunner this is a nop. The workdir must be defined within the
         definition of cmd_prefix.
         """
-        pass
 
     def omcpath(self, *path) -> OMPathABC:
         """
