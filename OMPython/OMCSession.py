@@ -1330,11 +1330,12 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
         self._omc_process, self._docker_process, self._docker_container_id = self._docker_omc_start(
             docker_image=docker,
             docker_cid=dockerContainer,
+            omc_port=port,
         )
         # connect to the running omc instance using ZMQ
         self._omc_port = self._omc_port_get(docker_cid=self._docker_container_id)
-        if port is not None and port != self._omc_port:
-            raise OMCSessionException(f"Port mismatch: {self._omc_port} <> {port}!")
+        if port is not None and not self._omc_port.endswith(f":{port}"):
+            raise OMCSessionException(f"Port mismatch: {self._omc_port} is not using the defined port {port}!")
 
         self._cmd_prefix = self.model_execution_prefix()
 
@@ -1366,6 +1367,7 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
             self,
             docker_image: Optional[str] = None,
             docker_cid: Optional[str] = None,
+            omc_port: Optional[int] = None,
     ) -> Tuple[subprocess.Popen, DockerPopen, str]:
         pass
 
@@ -1479,9 +1481,7 @@ class OMCSessionDocker(OMCSessionDockerABC):
 
     def __del__(self) -> None:
 
-        super().__del__()
-
-        if isinstance(self._docker_process, DockerPopen):
+        if hasattr(self, '_docker_process') and isinstance(self._docker_process, DockerPopen):
             try:
                 self._docker_process.wait(timeout=2.0)
             except subprocess.TimeoutExpired:
@@ -1492,6 +1492,8 @@ class OMCSessionDocker(OMCSessionDockerABC):
                     self._docker_process.wait(timeout=2.0)
             finally:
                 self._docker_process = None
+
+        super().__del__()
 
     def _docker_omc_cmd(
             self,
@@ -1553,6 +1555,7 @@ class OMCSessionDocker(OMCSessionDockerABC):
             self,
             docker_image: Optional[str] = None,
             docker_cid: Optional[str] = None,
+            omc_port: Optional[int] = None,
     ) -> Tuple[subprocess.Popen, DockerPopen, str]:
 
         if not isinstance(docker_image, str):
@@ -1568,6 +1571,7 @@ class OMCSessionDocker(OMCSessionDockerABC):
             omc_path_and_args_list=["--locale=C",
                                     "--interactive=zmq",
                                     f"-z={self._random_string}"],
+            omc_port=omc_port,
         )
 
         omc_process = subprocess.Popen(omc_command,
@@ -1638,6 +1642,7 @@ class OMCSessionDockerContainer(OMCSessionDockerABC):
             self,
             docker_cid: str,
             omc_path_and_args_list: list[str],
+            omc_port: Optional[int] = None,
     ) -> list:
         """
         Define the command that will be called by the subprocess module.
@@ -1646,14 +1651,14 @@ class OMCSessionDockerContainer(OMCSessionDockerABC):
 
         if sys.platform == "win32":
             extra_flags = ["-d=zmqDangerousAcceptConnectionsFromAnywhere"]
-            if not self._omc_port:
+            if not isinstance(omc_port, int):
                 raise OMCSessionException("Docker on Windows requires knowing which port to connect to - "
                                           "Please set the interactivePort argument. Furthermore, the container needs "
                                           "to have already manually exposed this port when it was started "
                                           "(-p 127.0.0.1:n:n) or you get an error later.")
 
-        if isinstance(self._omc_port, int):
-            extra_flags = extra_flags + [f"--interactivePort={int(self._omc_port)}"]
+        if isinstance(omc_port, int):
+            extra_flags = extra_flags + [f"--interactivePort={omc_port}"]
 
         omc_command = ([
                            "docker", "exec",
@@ -1670,6 +1675,7 @@ class OMCSessionDockerContainer(OMCSessionDockerABC):
             self,
             docker_image: Optional[str] = None,
             docker_cid: Optional[str] = None,
+            omc_port: Optional[int] = None,
     ) -> Tuple[subprocess.Popen, DockerPopen, str]:
 
         if not isinstance(docker_cid, str):
@@ -1682,6 +1688,7 @@ class OMCSessionDockerContainer(OMCSessionDockerABC):
             omc_path_and_args_list=["--locale=C",
                                     "--interactive=zmq",
                                     f"-z={self._random_string}"],
+            omc_port=omc_port,
         )
 
         omc_process = subprocess.Popen(omc_command,
