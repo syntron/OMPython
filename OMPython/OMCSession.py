@@ -1332,7 +1332,7 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
             docker_cid=dockerContainer,
         )
         # connect to the running omc instance using ZMQ
-        self._omc_port = self._omc_port_get()
+        self._omc_port = self._omc_port_get(docker_cid=self._docker_container_id)
         if port is not None and port != self._omc_port:
             raise OMCSessionException(f"Port mismatch: {self._omc_port} <> {port}!")
 
@@ -1380,11 +1380,14 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
         # Windows, hence the type: ignore comment.
         return 1000 if sys.platform == 'win32' else os.getuid()  # type: ignore
 
-    def _omc_port_get(self) -> str:
+    def _omc_port_get(
+            self,
+            docker_cid: str,
+    ) -> str:
         port = None
 
-        if not isinstance(self._docker_container_id, str):
-            raise OMCSessionException(f"Invalid docker container ID: {self._docker_container_id}")
+        if not isinstance(docker_cid, str):
+            raise OMCSessionException(f"Invalid docker container ID: {docker_cid}")
 
         # See if the omc server is running
         attempts = 0
@@ -1393,7 +1396,7 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
             if omc_portfile_path is not None:
                 try:
                     output = subprocess.check_output(args=["docker",
-                                                           "exec", self._docker_container_id,
+                                                           "exec", docker_cid,
                                                            "cat", omc_portfile_path.as_posix()],
                                                      stderr=subprocess.DEVNULL)
                     port = output.decode().strip()
@@ -1687,7 +1690,7 @@ class OMCSessionDockerContainer(OMCSessionDockerABC):
                                        env=my_env)
 
         docker_process = None
-        if isinstance(self._docker_container_id, str):
+        if isinstance(docker_cid, str):
             docker_process = self._docker_process_get(docker_cid=docker_cid)
 
         if docker_process is None:
