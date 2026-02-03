@@ -1552,7 +1552,7 @@ class OMCSessionDocker(OMCSessionDockerABC):
             docker_cid: Optional[str] = None,
     ) -> Tuple[subprocess.Popen, DockerPopen, str]:
 
-        if not isinstance(docker_image , str):
+        if not isinstance(docker_image, str):
             raise OMCSessionException("A docker image name must be provided!")
 
         my_env = os.environ.copy()
