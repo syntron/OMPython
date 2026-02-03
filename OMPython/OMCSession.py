@@ -382,7 +382,7 @@ class _OMCPath(OMPathABC):
 
     def is_absolute(self) -> bool:
         """
-        Check if the path is an absolute path.
+        Check if the path is an absolute path. Special handling to differentiate Windows and Posix definitions.
         """
         if isinstance(self._session, OMCSessionLocal) and platform.system() == 'Windows':
             return pathlib.PureWindowsPath(self.as_posix()).is_absolute()
