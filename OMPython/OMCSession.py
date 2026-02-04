@@ -2067,9 +2067,11 @@ class _OMPathRunnerBash(OMPathRunnerABC):
 
 
 if sys.version_info < (3, 12):
+    OMPathRunnerBase = OMPathCompatibility
     OMPathRunnerLocal = OMPathCompatibility
     OMPathRunnerBash = OMPathCompatibility
 else:
+    OMPathRunnerBase = OMPathRunnerABC
     OMPathRunnerLocal = _OMPathRunnerLocal
     OMPathRunnerBash = _OMPathRunnerBash
 
@@ -2083,14 +2085,14 @@ class OMSessionRunner(OMSessionABC):
             self,
             timeout: float = 10.00,
             version: str = "1.27.0",
-            ompath_runner: Type[OMPathRunnerABC] = OMPathRunnerLocal,
+            ompath_runner: Type[OMPathRunnerBase] = OMPathRunnerLocal,
             cmd_prefix: Optional[list[str]] = None,
             model_execution_local: bool = True,
     ) -> None:
         super().__init__(timeout=timeout)
         self._version = version
 
-        if not issubclass(ompath_runner, OMPathRunnerABC):
+        if not issubclass(ompath_runner, OMPathRunnerBase):
             raise OMCSessionException(f"Invalid OMPathRunner class: {type(ompath_runner)}!")
         self._ompath_runner = ompath_runner
 
