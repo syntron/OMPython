@@ -2858,3 +2858,8 @@ class ModelicaSystemCmd(ModelExecutionCmd):
     def run(self):
         cmd_definition = self.definition()
         return cmd_definition.run()
+
+
+# TODO: class ModelicaRunnerLocal / ModelicaRunnerBashLocal / MOdelicaRunnerBashWSL / MOdelicaRunnerBashDocker
+# TODO: error for < 3.12? (@docker / WSL / ...)
+# TODO: move classes
