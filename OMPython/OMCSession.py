@@ -372,13 +372,19 @@ class _OMCPath(OMPathABC):
         """
         Check if the path is a regular file.
         """
-        return self._session.sendExpression(f'regularFileExists("{self.as_posix()}")')
+        retval = self.get_session().sendExpression(f'regularFileExists("{self.as_posix()}")')
+        if not isinstance(retval, bool):
+            raise OMCSessionException(f"Invalid return value for is_file(): {retval} - expect bool")
+        return retval
 
     def is_dir(self) -> bool:
         """
         Check if the path is a directory.
         """
-        return self._session.sendExpression(f'directoryExists("{self.as_posix()}")')
+        retval = self.get_session().sendExpression(f'directoryExists("{self.as_posix()}")')
+        if not isinstance(retval, bool):
+            raise OMCSessionException(f"Invalid return value for is_dir(): {retval} - expect bool")
+        return retval
 
     def is_absolute(self) -> bool:
         """
@@ -392,7 +398,10 @@ class _OMCPath(OMPathABC):
         """
         Read the content of the file represented by this path as text.
         """
-        return self._session.sendExpression(f'readFile("{self.as_posix()}")')
+        retval = self._session.sendExpression(f'readFile("{self.as_posix()}")')
+        if not isinstance(retval, str):
+            raise OMCSessionException(f"Invalid return value for read_text(): {retval} - expect str")
+        return retval
 
     def write_text(self, data: str) -> int:
         """
@@ -466,8 +475,10 @@ class _OMCPath(OMPathABC):
                       'cd(omcpath_cwd)')
 
         try:
-            result = self._session.sendExpression(command=expression, parsed=False)
-            result_parts = result.split('\n')
+            retval = self._session.sendExpression(command=expression, parsed=False)
+            if not isinstance(retval, str):
+                raise OMCSessionException(f"Invalid return value for _omc_resolve(): {retval} - expect str")
+            result_parts = retval.split('\n')
             pathstr_resolved = result_parts[1]
             pathstr_resolved = pathstr_resolved[1:-1]  # remove quotes
         except OMCSessionException as ex:
@@ -950,7 +961,10 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
         """
         Get the OM version.
         """
-        return self.sendExpression("getVersion()", parsed=True)
+        retval = self.sendExpression("getVersion()", parsed=True)
+        if not isinstance(retval, str):
+            raise OMCSessionException(f"Invalid return value for get_version(): {retval} - expect str")
+        return retval
 
     def set_workdir(self, workdir: OMPathABC) -> None:
         """
