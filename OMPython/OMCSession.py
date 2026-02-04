@@ -527,8 +527,10 @@ class OMPathCompatibilityWindows(pathlib.WindowsPath, OMPathCompatibility):
 
 
 if sys.version_info < (3, 12):
+    OMPathBase = OMPathCompatibility
     OMCPath = OMPathCompatibility
 else:
+    OMPathBase = OMPathABC
     OMCPath = _OMCPath
 
 
