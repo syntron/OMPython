@@ -1427,7 +1427,10 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
         """
         if self._docker_network == "separate" and isinstance(self._docker_container_id, str):
             output = subprocess.check_output(["docker", "inspect", self._docker_container_id]).decode().strip()
-            return json.loads(output)[0]["NetworkSettings"]["IPAddress"]
+            address = json.loads(output)[0]["NetworkSettings"]["IPAddress"]
+            if not isinstance(address, str):
+                raise OMCSessionException(f"Invalid docker server address: {address}!")
+            return address
 
         return None
 
