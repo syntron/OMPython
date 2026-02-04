@@ -2586,6 +2586,7 @@ class ModelicaSystemDoE(ModelicaDoEOMC):
     """
 
 
+# TODO: rename ModelicaRunner
 class ModelicaSystemRunner(ModelicaSystemABC):
     """
     Class to simulate a Modelica model using a pre-compiled model binary.
