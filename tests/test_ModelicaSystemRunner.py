@@ -47,7 +47,7 @@ def param():
 
 def test_ModelicaSystemRunner(model_firstorder, param):
     # create a model using ModelicaSystem
-    mod = OMPython.ModelicaSystem()
+    mod = OMPython.ModelicaSystemOMC()
     mod.model(
         model_file=model_firstorder,
         model_name="M",
