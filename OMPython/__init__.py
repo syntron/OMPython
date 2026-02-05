@@ -23,6 +23,8 @@ from OMPython.ModelicaSystem import (
     ModelicaSystemRunner,
 
     doe_get_solutions,
+
+    ModelicaSystemCmd,
 )
 from OMPython.OMCSession import (
     ModelExecutionData,
@@ -46,6 +48,8 @@ from OMPython.OMCSession import (
     OMSessionRunner,
     OMCSessionWSL,
 
+    OMCProcessLocal,
+    OMCProcessPort,
 )
 
 # global names imported if import 'from OMPython import *' is used
@@ -63,6 +67,8 @@ __all__ = [
     'ModelicaDoEOMC',
     'ModelicaSystemError',
     'ModelicaSystemRunner',
+
+    'ModelicaSystemCmd',
 
     'doe_get_solutions',
 
@@ -84,4 +90,7 @@ __all__ = [
     'OMCSessionDocker',
     'OMCSessionDockerContainer',
     'OMCSessionWSL',
+
+    'OMCProcessLocal',
+    'OMCProcessPort',
 ]

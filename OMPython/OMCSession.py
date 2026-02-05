@@ -71,8 +71,8 @@ class OMCSessionCmd:
     Implementation of Open Modelica Compiler API functions. Depreciated!
     """
 
-    def __init__(self, session: OMCSessionABC, readonly: bool = False):
-        if not isinstance(session, OMCSessionABC):
+    def __init__(self, session: OMSessionABC, readonly: bool = False):
+        if not isinstance(session, OMSessionABC):
             raise OMCSessionException("Invalid OMC process definition!")
         self._session = session
         self._readonly = readonly
@@ -627,70 +627,6 @@ class ModelExecutionData:
             raise ModelExecutionException(f"Error running model executable {repr(cmdl)}: {ex}") from ex
 
         return returncode
-
-
-# TODO: OMCSessionCMd => separate file; based on OMCSessionZMQ?
-
-class OMCSessionZMQ:
-    """
-    This class is a compatibility layer for the new schema using OMCSession* classes.
-    """
-
-    def __init__(
-            self,
-            timeout: float = 10.00,
-            omhome: Optional[str] = None,
-            omc_process: Optional[OMCSessionABC] = None,
-    ) -> None:
-        """
-        Initialisation for OMCSessionZMQ
-        """
-        warnings.warn(message="The class OMCSessionZMQ is depreciated and will be removed in future versions; "
-                              "please use OMCProcess* classes instead!",
-                      category=DeprecationWarning,
-                      stacklevel=2)
-
-        if omc_process is None:
-            omc_process = OMCSessionLocal(omhome=omhome, timeout=timeout)
-        elif not isinstance(omc_process, OMCSessionABC):
-            raise OMCSessionException("Invalid definition of the OMC process!")
-        self.omc_process = omc_process
-
-    def __del__(self):
-        if hasattr(self, 'omc_process'):
-            del self.omc_process
-
-    @staticmethod
-    def escape_str(value: str) -> str:
-        """
-        Escape a string such that it can be used as string within OMC expressions, i.e. escape all double quotes.
-        """
-        return OMCSessionABC.escape_str(value=value)
-
-    def omcpath(self, *path) -> OMPathABC:
-        """
-        Create an OMCPath object based on the given path segments and the current OMC process definition.
-        """
-        return self.omc_process.omcpath(*path)
-
-    def omcpath_tempdir(self, tempdir_base: Optional[OMPathABC] = None) -> OMPathABC:
-        """
-        Get a temporary directory using OMC. It is our own implementation as non-local usage relies on OMC to run all
-        filesystem related access.
-        """
-        return self.omc_process.omcpath_tempdir(tempdir_base=tempdir_base)
-
-    def execute(self, command: str):
-        return self.omc_process.execute(command=command)
-
-    def sendExpression(self, command: str, parsed: bool = True) -> Any:
-        """
-        Send an expression to the OMC server and return the result.
-
-        The complete error handling of the OMC result is done within this method using '"getMessagesStringInternal()'.
-        Caller should only check for OMCSessionException.
-        """
-        return self.omc_process.sendExpression(command=command, parsed=parsed)
 
 
 class PostInitCaller(type):
@@ -1308,6 +1244,79 @@ class OMCSessionLocal(OMCSessionABC):
                     f"pid={self._omc_process.pid if isinstance(self._omc_process, subprocess.Popen) else '?'}")
 
         return port
+
+
+# TODO: OMCSessionCMd => separate file; based on OMCSessionZMQ?
+class OMCSessionZMQ(OMSessionABC):
+    """
+    This class is a compatibility layer for the new schema using OMCSession* classes.
+    """
+
+    def __init__(
+            self,
+            timeout: float = 10.00,
+            omhome: Optional[str] = None,
+            omc_process: Optional[OMCSessionABC] = None,
+    ) -> None:
+        """
+        Initialisation for OMCSessionZMQ
+        """
+        super().__init__(timeout=timeout)
+        warnings.warn(message="The class OMCSessionZMQ is depreciated and will be removed in future versions; "
+                              "please use OMCProcess* classes instead!",
+                      category=DeprecationWarning,
+                      stacklevel=2)
+
+        if omc_process is None:
+            omc_process = OMCSessionLocal(omhome=omhome, timeout=timeout)
+        elif not isinstance(omc_process, OMCSessionABC):
+            raise OMCSessionException("Invalid definition of the OMC process!")
+        self.omc_process = omc_process
+
+    def __del__(self):
+        if hasattr(self, 'omc_process'):
+            del self.omc_process
+
+    @staticmethod
+    def escape_str(value: str) -> str:
+        """
+        Escape a string such that it can be used as string within OMC expressions, i.e. escape all double quotes.
+        """
+        return OMCSessionABC.escape_str(value=value)
+
+    def omcpath(self, *path) -> OMPathABC:
+        """
+        Create an OMCPath object based on the given path segments and the current OMC process definition.
+        """
+        return self.omc_process.omcpath(*path)
+
+    def omcpath_tempdir(self, tempdir_base: Optional[OMPathABC] = None) -> OMPathABC:
+        """
+        Get a temporary directory using OMC. It is our own implementation as non-local usage relies on OMC to run all
+        filesystem related access.
+        """
+        return self.omc_process.omcpath_tempdir(tempdir_base=tempdir_base)
+
+    def execute(self, command: str):
+        return self.omc_process.execute(command=command)
+
+    def sendExpression(self, command: str, parsed: bool = True) -> Any:
+        """
+        Send an expression to the OMC server and return the result.
+
+        The complete error handling of the OMC result is done within this method using '"getMessagesStringInternal()'.
+        Caller should only check for OMCSessionException.
+        """
+        return self.omc_process.sendExpression(command=command, parsed=parsed)
+
+    def get_version(self) -> str:
+        return self.omc_process.get_version()
+
+    def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
+        return self.omc_process.model_execution_prefix(cwd=cwd)
+
+    def set_workdir(self, workdir: OMPathABC) -> None:
+        return self.omc_process.set_workdir(workdir=workdir)
 
 
 class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
@@ -2159,3 +2168,11 @@ class OMSessionRunner(OMSessionABC):
 
     def sendExpression(self, command: str, parsed: bool = True) -> Any:
         raise OMCSessionException(f"{self.__class__.__name__} does not uses an OMC server!")
+
+
+DummyPopen = DockerPopen
+OMCProcessLocal = OMCSessionLocal
+OMCProcessPort = OMCSessionPort
+OMCProcessDocker = OMCSessionDocker
+OMCProcessDockerContainer = OMCSessionDockerContainer
+OMCProcessWSL = OMCSessionWSL
