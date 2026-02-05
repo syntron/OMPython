@@ -35,10 +35,8 @@
 import sys
 from typing import Dict, Any
 
-result: Dict[str, Any] = dict()
+result: Dict[str, Any] = {}
 
-inner_sets = []
-next_set_list = []
 next_set = []
 next_set.append('')
 
