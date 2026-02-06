@@ -261,12 +261,12 @@ if sys.version_info >= (3, 12):
     class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
         """
         Implementation of a basic (PurePosix)Path object to be used within OMPython. The derived classes can use OMC as
-        backend and - thus - work on different configurations like docker or WSL. The connection to OMC is provided via an
-        instances of classes derived from BaseSession.
+        backend and - thus - work on different configurations like docker or WSL. The connection to OMC is provided via
+        an instances of classes derived from BaseSession.
 
-        PurePosixPath is selected as it covers all but Windows systems (Linux, docker, WSL). However, the code is written
-        such that possible Windows system are taken into account. Nevertheless, the overall functionality is limited
-        compared to standard pathlib.Path objects.
+        PurePosixPath is selected as it covers all but Windows systems (Linux, docker, WSL). However, the code is
+        written such that possible Windows system are taken into account. Nevertheless, the overall functionality is
+        limited compared to standard pathlib.Path objects.
         """
 
         def __init__(self, *path, session: OMSessionABC) -> None:
@@ -362,7 +362,6 @@ if sys.version_info >= (3, 12):
             """
             Get the size of the file in bytes - this is an extra function and the best we can do using OMC.
             """
-
 
     class _OMCPath(OMPathABC):
         """
@@ -527,12 +526,10 @@ else:
             """
             return self.stat().st_size
 
-
     class OMPathCompatibilityPosix(pathlib.PosixPath, OMPathCompatibility):
         """
         Compatibility class for OMCPath on Posix systems (Python < 3.12)
         """
-
 
     class OMPathCompatibilityWindows(pathlib.WindowsPath, OMPathCompatibility):
         """
@@ -1841,15 +1838,14 @@ if sys.version_info >= (3, 12):
         def _path(self) -> pathlib.Path:
             return pathlib.Path(self.as_posix())
 
-
     class _OMPathRunnerLocal(OMPathRunnerABC):
         """
-        Implementation of OMPathABC which does not use the session data at all. Thus, this implementation can run locally
-        without any usage of OMC.
+        Implementation of OMPathABC which does not use the session data at all. Thus, this implementation can run
+        locally without any usage of OMC.
 
-        This class is based on OMPathABC and, therefore, on pathlib.PurePosixPath. This is working well, but it is not the
-        correct implementation on Windows systems. To get a valid Windows representation of the path, use the conversion
-        via pathlib.Path(<OMCPathDummy>.as_posix()).
+        This class is based on OMPathABC and, therefore, on pathlib.PurePosixPath. This is working well, but it is not
+        the correct implementation on Windows systems. To get a valid Windows representation of the path, use the
+        conversion via pathlib.Path(<OMCPathDummy>.as_posix()).
         """
 
         def _path(self) -> pathlib.Path:
@@ -1927,19 +1923,19 @@ if sys.version_info >= (3, 12):
             path = self._path()
             return path.stat().st_size
 
-
     # TODO get_cmd_prefix()
     # TODO: used by WSL / docker
     # TODO: get cmd_prefix via OMSession.model_execution_prefix()
+
     class _OMPathRunnerBash(OMPathRunnerABC):
         """
-        Implementation of OMPathABC which does not use the session data at all. Thus, this implementation can run locally
-        without any usage of OMC. The special case of this class is the usage of POSIX bash to run all the commands. Thus,
-        it can be used in WSL or docker.
+        Implementation of OMPathABC which does not use the session data at all. Thus, this implementation can run
+        locally without any usage of OMC. The special case of this class is the usage of POSIX bash to run all the
+        commands. Thus, it can be used in WSL or docker.
 
-        This class is based on OMPathABC and, therefore, on pathlib.PurePosixPath. This is working well, but it is not the
-        correct implementation on Windows systems. To get a valid Windows representation of the path, use the conversion
-        via pathlib.Path(<OMCPathDummy>.as_posix()).
+        This class is based on OMPathABC and, therefore, on pathlib.PurePosixPath. This is working well, but it is not
+        the correct implementation on Windows systems. To get a valid Windows representation of the path, use the
+        conversion via pathlib.Path(<OMCPathDummy>.as_posix()).
         """
 
         def is_file(self) -> bool:
