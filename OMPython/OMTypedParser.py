@@ -111,9 +111,9 @@ omcValue = Forward()
 
 # pyparsing's replace_with (and thus replace_with) has incorrect type
 # annotation: https://github.com/pyparsing/pyparsing/issues/602
-TRUE = Keyword("true").set_parse_action(replace_with(True))
-FALSE = Keyword("false").set_parse_action(replace_with(False))
-NONE = (Keyword("NONE") + Suppress("(") + Suppress(")")).set_parse_action(replace_with(None))
+TRUE = Keyword("true").set_parse_action(replace_with(True))   # type: ignore
+FALSE = Keyword("false").set_parse_action(replace_with(False))   # type: ignore
+NONE = (Keyword("NONE") + Suppress("(") + Suppress(")")).set_parse_action(replace_with(None))  # type: ignore
 SOME = (Suppress(Keyword("SOME")) + Suppress("(") + omcValue + Suppress(")"))
 
 omcString = QuotedString(quote_char='"', esc_char='\\', multiline=True).set_parse_action(convert_string)
