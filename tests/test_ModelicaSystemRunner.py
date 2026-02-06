@@ -11,6 +11,11 @@ skip_on_windows = pytest.mark.skipif(
     reason="OpenModelica Docker image is Linux-only; skipping on Windows.",
 )
 
+skip_python_older_312 = pytest.mark.skipif(
+    sys.version_info < (3, 12),
+    reason="OMCPath(non-local) only working for Python >= 3.12.",
+)
+
 
 @pytest.fixture
 def model_firstorder_content():
@@ -151,6 +156,7 @@ def test_ModelicaSystemRunner_bash(model_firstorder, param):
 
 
 @skip_on_windows
+@skip_python_older_312
 def test_ModelicaSystemRunner_bash_docker(model_firstorder, param):
     omcp = OMPython.OMCSessionDocker(docker="openmodelica/openmodelica:v1.25.0-minimal")
     om = OMPython.OMCSessionZMQ(omc_process=omcp)
