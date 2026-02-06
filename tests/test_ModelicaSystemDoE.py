@@ -78,7 +78,7 @@ def test_ModelicaSystemDoE_docker(tmp_path, model_doe, param_doe):
     omc = OMPython.OMCSessionZMQ(omc_process=omcs)
     assert omc.sendExpression("getVersion()") == "OpenModelica 1.25.0"
 
-    mod = OMPython.ModelicaSystem(
+    mod = OMPython.ModelicaSystemOMC(
         session=omcs,
     )
     mod.model(
@@ -102,7 +102,7 @@ def test_ModelicaSystemDoE_WSL(tmp_path, model_doe, param_doe):
     omc = OMPython.OMCSessionZMQ(omc_process=omcs)
     assert omc.sendExpression("getVersion()") == "OpenModelica 1.25.0"
 
-    mod = OMPython.ModelicaSystem(
+    mod = OMPython.ModelicaSystemOMC(
         session=omcs,
     )
     mod.model(
