@@ -328,7 +328,7 @@ class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def cwd(self) -> OMPathABC:
         """
-        Returns the current working directory as an OMPathBase object.
+        Returns the current working directory as an OMPathABC object.
         """
 
     @abc.abstractmethod
@@ -364,7 +364,7 @@ class OMPathABC(pathlib.PurePosixPath, metaclass=abc.ABCMeta):
 
 class _OMCPath(OMPathABC):
     """
-    Implementation of a OMPathBase using OMC as backend. The connection to OMC is provided via an instances of an
+    Implementation of a OMPathABC using OMC as backend. The connection to OMC is provided via an instances of an
     OMCSession* classes.
     """
 
@@ -429,12 +429,12 @@ class _OMCPath(OMPathABC):
         if not self._session.sendExpression(f'mkdir("{self.as_posix()}")'):
             raise OMCSessionException(f"Error on directory creation for {self.as_posix()}!")
 
-    def cwd(self) -> OMPathBase:
+    def cwd(self) -> OMPathABC:
         """
-        Returns the current working directory as an OMPathBase object.
+        Returns the current working directory as an OMPathABC object.
         """
         cwd_str = self._session.sendExpression('cd()')
-        return self.__class__(cwd_str, session=self._session)
+        return type(self)(cwd_str, session=self._session)
 
     def unlink(self, missing_ok: bool = False) -> None:
         """
@@ -444,7 +444,7 @@ class _OMCPath(OMPathABC):
         if not res and not missing_ok:
             raise FileNotFoundError(f"Cannot delete file {self.as_posix()} - it does not exists!")
 
-    def resolve(self, strict: bool = False) -> OMPathBase:
+    def resolve(self, strict: bool = False) -> OMPathABC:
         """
         Resolve the path to an absolute path. This is done based on available OMC functions.
         """
