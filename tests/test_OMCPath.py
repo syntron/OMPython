@@ -18,50 +18,78 @@ skip_python_older_312 = pytest.mark.skipif(
 def test_OMCPath_OMCSessionZMQ():
     om = OMPython.OMCSessionZMQ()
 
-    _run_OMCPath_checks(om)
+    # OMCSessionZMQ is NOT derived from OMSessionABC
+    _run_OMPath_checks(om)
+    _run_OMPath_write_file(om)
 
     del om
 
 
-def test_OMCPath_OMCProcessLocal():
-    omp = OMPython.OMCSessionLocal()
-    om = OMPython.OMCSessionZMQ(omc_process=omp)
+def test_OMCPath_OMCSessionLocal():
+    oms = OMPython.OMCSessionLocal()
 
-    _run_OMCPath_checks(om)
-
-    del om
+    _run_OMPath_checks(oms)
+    _run_OMPath_write_file(oms)
 
 
 @skip_on_windows
 @skip_python_older_312
-def test_OMCPath_OMCProcessDocker():
-    omcp = OMPython.OMCSessionDocker(docker="openmodelica/openmodelica:v1.25.0-minimal")
-    om = OMPython.OMCSessionZMQ(omc_process=omcp)
-    assert om.sendExpression("getVersion()") == "OpenModelica 1.25.0"
+def test_OMCPath_OMCSessionDocker():
+    oms = OMPython.OMCSessionDocker(docker="openmodelica/openmodelica:v1.25.0-minimal")
+    assert oms.sendExpression("getVersion()") == "OpenModelica 1.25.0"
 
-    _run_OMCPath_checks(om)
-
-    del omcp
-    del om
+    _run_OMPath_checks(oms)
+    _run_OMPath_write_file(oms)
 
 
 @pytest.mark.skip(reason="Not able to run WSL on github")
 @skip_python_older_312
-def test_OMCPath_OMCProcessWSL():
-    omcp = OMPython.OMCSessionWSL(
+def test_OMCPath_OMCSessionWSL():
+    oms = OMPython.OMCSessionWSL(
         wsl_omc='omc',
         wsl_user='omc',
         timeout=30.0,
     )
-    om = OMPython.OMCSessionZMQ(omc_process=omcp)
 
-    _run_OMCPath_checks(om)
-
-    del omcp
-    del om
+    _run_OMPath_checks(oms)
+    _run_OMPath_write_file(oms)
 
 
-def _run_OMCPath_checks(om: OMPython.OMCSessionZMQ):
+@skip_python_older_312
+def test_OMPath_OMPathRunnerLocal():
+    oms = OMPython.OMSessionRunner()
+
+    _run_OMPath_checks(oms)
+    _run_OMPath_write_file(oms)
+
+
+@skip_on_windows
+@skip_python_older_312
+def test_OMPath_OMSessionRunnerBash():
+    oms = OMPython.OMSessionRunner(
+        ompath_runner=OMPython.OMPathRunnerBash,
+    )
+
+    _run_OMPath_checks(oms)
+    _run_OMPath_write_file(oms)
+
+
+@skip_on_windows
+@skip_python_older_312
+def test_OMPath_OMPathRunnerBash_Docker():
+    oms_docker = OMPython.OMCSessionDocker(docker="openmodelica/openmodelica:v1.25.0-minimal")
+    assert oms_docker.sendExpression("getVersion()") == "OpenModelica 1.25.0"
+
+    oms = OMPython.OMSessionRunner(
+        cmd_prefix=oms_docker.get_cmd_prefix(),
+        ompath_runner=OMPython.OMPathRunnerBash,
+    )
+
+    _run_OMPath_checks(oms)
+    _run_OMPath_write_file(oms)
+
+
+def _run_OMPath_checks(om: OMPython.OMSessionABC):
     p1 = om.omcpath_tempdir()
     p2 = p1 / 'test'
     p2.mkdir()
@@ -71,8 +99,8 @@ def _run_OMCPath_checks(om: OMPython.OMCSessionZMQ):
     assert p3.write_text('test')
     assert p3.is_file()
     assert p3.size() > 0
-    p3 = p3.resolve().absolute()
-    assert str(p3) == str((p2 / 'test.txt').resolve().absolute())
+    p3 = p3.resolve()
+    assert str(p3) == str((p2 / 'test.txt').resolve())
     assert p3.read_text() == "test"
     assert p3.is_file()
     assert p3.parent.is_dir()
@@ -80,9 +108,7 @@ def _run_OMCPath_checks(om: OMPython.OMCSessionZMQ):
     assert p3.is_file() is False
 
 
-def test_OMCPath_write_file(tmpdir):
-    om = OMPython.OMCSessionZMQ()
-
+def _run_OMPath_write_file(om: OMPython.OMSessionABC):
     data = "abc # \\t # \" # \\n # xyz"
 
     p1 = om.omcpath_tempdir()

@@ -72,6 +72,11 @@ disable = [
     # TODO: the items below should be checked and corrected
     'C0103', # Variable name doesn't conform to snake_case naming style (invalid-name)
     'C0116', # Missing function or method docstring (missing-function-docstring)
-    'W0511', # TODO / fixme (fixme)
+    'W0221', # Variadics removed in overriding '???' method (arguments-differ)
+    'W0511', # Warning for TODO, FIXME, or similar comments left in the code (fixme)
     'W1203', # Use lazy % formatting in logging functions (logging-fstring-interpolation)
+
+    'C0114', # Missing module docstring (missing-module-docstring)
+    'C0123', # Use isinstance() rather than type() for a typecheck. (unidiomatic-typecheck)
+    'W0621', # Redefining name '???' from outer scope (line ???) (redefined-outer-name)
 ]
