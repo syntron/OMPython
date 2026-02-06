@@ -712,7 +712,7 @@ class OMSessionABC(metaclass=OMSessionMeta):
         return value.replace("\\", "\\\\").replace('"', '\\"')
 
     @abc.abstractmethod
-    def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
+    def model_execution_prefix(self, cwd: Optional[OMPathBase] = None) -> list[str]:
         """
         Helper function which returns a command prefix.
         """
@@ -724,28 +724,28 @@ class OMSessionABC(metaclass=OMSessionMeta):
         """
 
     @abc.abstractmethod
-    def set_workdir(self, workdir: OMPathABC) -> None:
+    def set_workdir(self, workdir: OMPathBase) -> None:
         """
         Set the workdir for this session.
         """
 
     @abc.abstractmethod
-    def omcpath(self, *path) -> OMPathABC:
+    def omcpath(self, *path) -> OMPathBase:
         """
         Create an OMPathBase object based on the given path segments and the current class.
         """
 
     @abc.abstractmethod
-    def omcpath_tempdir(self, tempdir_base: Optional[OMCPath] = None) -> OMPathABC:
+    def omcpath_tempdir(self, tempdir_base: Optional[OMCPath] = None) -> OMPathBase:
         """
         Get a temporary directory based on the specific definition for this session.
         """
 
     @staticmethod
-    def _tempdir(tempdir_base: OMPathABC) -> OMPathABC:
+    def _tempdir(tempdir_base: OMPathBase) -> OMPathBase:
         names = [str(uuid.uuid4()) for _ in range(100)]
 
-        tempdir: Optional[OMPathABC] = None
+        tempdir: Optional[OMPathBase] = None
         for name in names:
             # create a unique temporary directory name
             tempdir = tempdir_base / name
@@ -887,7 +887,7 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
         """
         return value.replace("\\", "\\\\").replace('"', '\\"')
 
-    def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
+    def model_execution_prefix(self, cwd: Optional[OMPathBase] = None) -> list[str]:
         """
         Helper function which returns a command prefix needed for docker and WSL. It defaults to an empty list.
         """
@@ -902,14 +902,14 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
             raise OMCSessionException(f"Invalid return value for get_version(): {retval} - expect str")
         return retval
 
-    def set_workdir(self, workdir: OMPathABC) -> None:
+    def set_workdir(self, workdir: OMPathBase) -> None:
         """
         Set the workdir for this session.
         """
         exp = f'cd("{workdir.as_posix()}")'
         self.sendExpression(exp)
 
-    def omcpath(self, *path) -> OMPathABC:
+    def omcpath(self, *path) -> OMPathBase:
         """
         Create an OMCPath object based on the given path segments and the current OMCSession* class.
         """
@@ -922,7 +922,7 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
             raise OMCSessionException("OMCPath is supported for Python < 3.12 only if OMCSessionLocal is used!")
         return OMCPath(*path, session=self)
 
-    def omcpath_tempdir(self, tempdir_base: Optional[OMPathABC] = None) -> OMPathABC:
+    def omcpath_tempdir(self, tempdir_base: Optional[OMPathBase] = None) -> OMPathBase:
         """
         Get a temporary directory using OMC. It is our own implementation as non-local usage relies on OMC to run all
         filesystem related access.
@@ -939,10 +939,10 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
         return self._tempdir(tempdir_base=tempdir_base)
 
     @staticmethod
-    def _tempdir(tempdir_base: OMPathABC) -> OMPathABC:
+    def _tempdir(tempdir_base: OMPathBase) -> OMPathBase:
         names = [str(uuid.uuid4()) for _ in range(100)]
 
-        tempdir: Optional[OMPathABC] = None
+        tempdir: Optional[OMPathBase] = None
         for name in names:
             # create a unique temporary directory name
             tempdir = tempdir_base / name
@@ -1284,13 +1284,13 @@ class OMCSessionZMQ(OMSessionABC):
         """
         return OMCSessionABC.escape_str(value=value)
 
-    def omcpath(self, *path) -> OMPathABC:
+    def omcpath(self, *path) -> OMPathBase:
         """
         Create an OMCPath object based on the given path segments and the current OMC process definition.
         """
         return self.omc_process.omcpath(*path)
 
-    def omcpath_tempdir(self, tempdir_base: Optional[OMPathABC] = None) -> OMPathABC:
+    def omcpath_tempdir(self, tempdir_base: Optional[OMPathBase] = None) -> OMPathBase:
         """
         Get a temporary directory using OMC. It is our own implementation as non-local usage relies on OMC to run all
         filesystem related access.
@@ -1312,10 +1312,10 @@ class OMCSessionZMQ(OMSessionABC):
     def get_version(self) -> str:
         return self.omc_process.get_version()
 
-    def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
+    def model_execution_prefix(self, cwd: Optional[OMPathBase] = None) -> list[str]:
         return self.omc_process.model_execution_prefix(cwd=cwd)
 
-    def set_workdir(self, workdir: OMPathABC) -> None:
+    def set_workdir(self, workdir: OMPathBase) -> None:
         return self.omc_process.set_workdir(workdir=workdir)
 
 
@@ -1466,7 +1466,7 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
 
         return self._docker_container_id
 
-    def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
+    def model_execution_prefix(self, cwd: Optional[OMPathBase] = None) -> list[str]:
         """
         Helper function which returns a command prefix needed for docker and WSL. It defaults to an empty list.
         """
@@ -1474,7 +1474,7 @@ class OMCSessionDockerABC(OMCSessionABC, metaclass=abc.ABCMeta):
             "docker", "exec",
             "--user", str(self._getuid()),
         ]
-        if isinstance(cwd, OMPathABC):
+        if isinstance(cwd, OMPathBase):
             docker_cmd += ["--workdir", cwd.as_posix()]
         docker_cmd += self._docker_extra_args
         if isinstance(self._docker_container_id, str):
@@ -1762,7 +1762,7 @@ class OMCSessionWSL(OMCSessionABC):
 
         self._cmd_prefix = self.model_execution_prefix()
 
-    def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
+    def model_execution_prefix(self, cwd: Optional[OMPathBase] = None) -> list[str]:
         """
         Helper function which returns a command prefix needed for docker and WSL. It defaults to an empty list.
         """
@@ -1772,7 +1772,7 @@ class OMCSessionWSL(OMCSessionABC):
             wsl_cmd += ['--distribution', self._wsl_distribution]
         if isinstance(self._wsl_user, str):
             wsl_cmd += ['--user', self._wsl_user]
-        if isinstance(cwd, OMPathABC):
+        if isinstance(cwd, OMPathBase):
             wsl_cmd += ['--cd', cwd.as_posix()]
         wsl_cmd += ['--']
 
@@ -1890,7 +1890,7 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
         """
         self._path().mkdir(parents=parents, exist_ok=exist_ok)
 
-    def cwd(self) -> OMPathABC:
+    def cwd(self) -> OMPathBase:
         """
         Returns the current working directory as an OMPathBase object.
         """
@@ -1902,7 +1902,7 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
         """
         self._path().unlink(missing_ok=missing_ok)
 
-    def resolve(self, strict: bool = False) -> OMPathABC:
+    def resolve(self, strict: bool = False) -> OMPathBase:
         """
         Resolve the path to an absolute path. This is done based on available OMC functions.
         """
@@ -2025,7 +2025,7 @@ class _OMPathRunnerBash(OMPathRunnerABC):
         except subprocess.CalledProcessError as exc:
             raise OMCSessionException(f"Error on directory creation for {self.as_posix()}!") from exc
 
-    def cwd(self) -> OMPathABC:
+    def cwd(self) -> OMPathBase:
         """
         Returns the current working directory as an OMPathBase object.
         """
@@ -2056,7 +2056,7 @@ class _OMPathRunnerBash(OMPathRunnerABC):
         except subprocess.CalledProcessError as exc:
             raise OSError(f"Cannot unlink file {self.as_posix()}: {exc}") from exc
 
-    def resolve(self, strict: bool = False) -> OMPathABC:
+    def resolve(self, strict: bool = False) -> OMPathBase:
         """
         Resolve the path to an absolute path. This is done based on available OMC functions.
         """
@@ -2131,7 +2131,7 @@ class OMSessionRunner(OMSessionABC):
         No connection to an OMC server is created by this class!
         """
 
-    def model_execution_prefix(self, cwd: Optional[OMPathABC] = None) -> list[str]:
+    def model_execution_prefix(self, cwd: Optional[OMPathBase] = None) -> list[str]:
         """
         Helper function which returns a command prefix.
         """
@@ -2144,19 +2144,19 @@ class OMSessionRunner(OMSessionABC):
         """
         return self._version
 
-    def set_workdir(self, workdir: OMPathABC) -> None:
+    def set_workdir(self, workdir: OMPathBase) -> None:
         """
         Set the workdir for this session. For OMSessionRunner this is a nop. The workdir must be defined within the
         definition of cmd_prefix.
         """
 
-    def omcpath(self, *path) -> OMPathABC:
+    def omcpath(self, *path) -> OMPathBase:
         """
         Create an OMCPath object based on the given path segments and the current OMCSession* class.
         """
         return self._ompath_runner(*path, session=self)
 
-    def omcpath_tempdir(self, tempdir_base: Optional[OMPathABC] = None) -> OMPathABC:
+    def omcpath_tempdir(self, tempdir_base: Optional[OMPathBase] = None) -> OMPathBase:
         """
         Get a temporary directory without using OMC.
         """
