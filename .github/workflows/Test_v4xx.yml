@@ -1,4 +1,4 @@
-name: Test-v4.0.0
+name: Test-v4.x.x
 
 on:
   workflow_dispatch:
