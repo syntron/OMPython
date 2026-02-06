@@ -429,7 +429,7 @@ class _OMCPath(OMPathABC):
         if not self._session.sendExpression(f'mkdir("{self.as_posix()}")'):
             raise OMCSessionException(f"Error on directory creation for {self.as_posix()}!")
 
-    def cwd(self) -> OMPathABC:
+    def cwd(self) -> OMPathBase:
         """
         Returns the current working directory as an OMPathBase object.
         """
@@ -444,7 +444,7 @@ class _OMCPath(OMPathABC):
         if not res and not missing_ok:
             raise FileNotFoundError(f"Cannot delete file {self.as_posix()} - it does not exists!")
 
-    def resolve(self, strict: bool = False) -> OMPathABC:
+    def resolve(self, strict: bool = False) -> OMPathBase:
         """
         Resolve the path to an absolute path. This is done based on available OMC functions.
         """
@@ -878,6 +878,7 @@ class OMCSessionABC(OMSessionABC, metaclass=abc.ABCMeta):
                     self._omc_process.kill()
                     self._omc_process.wait()
             finally:
+
                 self._omc_process = None
 
     @staticmethod
@@ -1878,6 +1879,9 @@ class _OMPathRunnerLocal(OMPathRunnerABC):
         """
         Write text data to the file represented by this path.
         """
+        if not isinstance(data, str):
+            raise TypeError(f"data must be str, not {data.__class__.__name__}")
+
         return self._path().write_text(data=data, encoding='utf-8')
 
     def mkdir(self, parents: bool = True, exist_ok: bool = False) -> None:
@@ -1960,7 +1964,7 @@ class _OMPathRunnerBash(OMPathRunnerABC):
         except subprocess.CalledProcessError:
             return False
 
-    def is_absolute(self):
+    def is_absolute(self) -> bool:
         """
         Check if the path is an absolute path.
         """
@@ -1986,10 +1990,13 @@ class _OMPathRunnerBash(OMPathRunnerABC):
             return result.stdout.decode('utf-8')
         raise FileNotFoundError(f"Cannot read file: {self.as_posix()}")
 
-    def write_text(self, data: str):
+    def write_text(self, data: str) -> int:
         """
         Write text data to the file represented by this path.
         """
+        if not isinstance(data, str):
+            raise TypeError(f"data must be str, not {data.__class__.__name__}")
+
         data_escape = self._session.escape_str(data)
 
         cmdl = self.get_session().get_cmd_prefix()
@@ -1997,9 +2004,9 @@ class _OMPathRunnerBash(OMPathRunnerABC):
 
         try:
             subprocess.run(cmdl, check=True)
-            return True
+            return len(data)
         except subprocess.CalledProcessError:
-            return False
+            raise IOError(f"Error writing data to file {self.as_posix()}!")
 
     def mkdir(self, parents: bool = True, exist_ok: bool = False) -> None:
         """
