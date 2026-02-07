@@ -1,11 +1,6 @@
 name: Test-Publish
 
 on:
-  push:
-    branches: ['master']
-    tags:
-      - 'v*'   # only publish when pushing version tags (e.g., v1.0.0)
-  pull_request:
   workflow_dispatch:
 
 jobs:
