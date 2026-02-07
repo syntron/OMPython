@@ -88,7 +88,6 @@ def test_ModelicaSystemDoE_docker(tmp_path, model_doe, param_doe):
     doe_mod = OMPython.ModelicaSystemDoE(
         mod=mod,
         parameters=param_doe,
-        session=omcs,
         simargs={"override": {'stopTime': '1.0'}},
     )
 
