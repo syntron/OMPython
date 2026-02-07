@@ -26,13 +26,13 @@ from OMPython.OMCSession import (
     ModelExecutionException,
 
     OMCSessionCmd,
-    OMCSessionException,
-    OMCSessionZMQ,
-    OMCSessionPort,
-    OMCSessionLocal,
     OMCSessionDocker,
     OMCSessionDockerContainer,
+    OMCSessionException,
+    OMCSessionLocal,
+    OMCSessionPort,
     OMCSessionWSL,
+    OMCSessionZMQ,
 )
 
 # global names imported if import 'from OMPython import *' is used
@@ -51,11 +51,11 @@ __all__ = [
 
     'OMCSession',
     'OMCSessionCmd',
-    'OMCSessionException',
-    'OMCSessionZMQ',
-    'OMCSessionPort',
-    'OMCSessionLocal',
     'OMCSessionDocker',
     'OMCSessionDockerContainer',
+    'OMCSessionException',
+    'OMCSessionPort',
+    'OMCSessionLocal',
     'OMCSessionWSL',
+    'OMCSessionZMQ',
 ]
