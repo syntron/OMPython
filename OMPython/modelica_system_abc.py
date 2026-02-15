@@ -18,6 +18,7 @@ import numpy as np
 
 from OMPython.model_execution import (
     ModelExecutionCmd,
+    ModelExecutionException,
 )
 from OMPython.om_session_abc import (
     OMPathABC,
@@ -199,7 +200,10 @@ class ModelicaSystemABC(metaclass=abc.ABCMeta):
         # ... by running it - output help for command help
         om_cmd.arg_set(key="help", val="help")
         cmd_definition = om_cmd.definition()
-        returncode = cmd_definition.run()
+        try:
+            returncode = cmd_definition.run()
+        except ModelExecutionException as exc:
+            raise ModelicaSystemError(f"Cannot execute model: {exc}") from exc
         if returncode != 0:
             raise ModelicaSystemError("Model executable not working!")
 
@@ -730,7 +734,10 @@ class ModelicaSystemABC(metaclass=abc.ABCMeta):
             self._result_file.unlink()
         # ... run simulation ...
         cmd_definition = om_cmd.definition()
-        returncode = cmd_definition.run()
+        try:
+            returncode = cmd_definition.run()
+        except ModelExecutionException as exc:
+            raise ModelicaSystemError(f"Cannot execute model: {exc}") from exc
         # and check returncode *AND* resultfile
         if returncode != 0 and self._result_file.is_file():
             # check for an empty (=> 0B) result file which indicates a crash of the model executable
@@ -1173,7 +1180,10 @@ class ModelicaSystemABC(metaclass=abc.ABCMeta):
         linear_file.unlink(missing_ok=True)
 
         cmd_definition = om_cmd.definition()
-        returncode = cmd_definition.run()
+        try:
+            returncode = cmd_definition.run()
+        except ModelExecutionException as exc:
+            raise ModelicaSystemError(f"Cannot execute model: {exc}") from exc
         if returncode != 0:
             raise ModelicaSystemError(f"Linearize failed with return code: {returncode}")
         if not linear_file.is_file():
