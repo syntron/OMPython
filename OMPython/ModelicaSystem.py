@@ -28,10 +28,15 @@ from OMPython.modelica_doe_omc import (
     ModelicaDoEOMC,
 )
 
+from OMPython.compatibility_v400 import (
+    depreciated_class,
+)
+
 # define logger using the current module name as ID
 logger = logging.getLogger(__name__)
 
 
+@depreciated_class(msg="Please use class ModelicaSystemOMC instead!")
 class ModelicaSystem(ModelicaSystemOMC):
     """
     Compatibility class.
@@ -170,12 +175,14 @@ class ModelicaSystem(ModelicaSystemOMC):
         raise ModelExecutionException("Invalid data!")
 
 
+@depreciated_class(msg="Please use class ModelicaDoEOMC instead!")
 class ModelicaSystemDoE(ModelicaDoEOMC):
     """
     Compatibility class.
     """
 
 
+@depreciated_class(msg="Please use class ModelExecutionCmd instead!")
 class ModelicaSystemCmd(ModelExecutionCmd):
     """
     Compatibility class; in the new version it is renamed as ModelExecutionCmd.
