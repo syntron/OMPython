@@ -140,7 +140,7 @@ class ModelicaSystem(ModelicaSystemOMC):
                     retval3.append(str(val))
             return retval3
 
-        raise ModelExecutionException("Invalid data!")
+        raise ModelicaSystemError("Invalid data!")
 
     def getOutputs(
             self,
@@ -167,7 +167,7 @@ class ModelicaSystem(ModelicaSystemOMC):
                     retval3.append(str(val))
             return retval3
 
-        raise ModelExecutionException("Invalid data!")
+        raise ModelicaSystemError("Invalid data!")
 
 
 class ModelicaSystemDoE(ModelicaDoEOMC):
