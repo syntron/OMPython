@@ -765,8 +765,10 @@ class ModelicaSystemABC(metaclass=abc.ABCMeta):
             key_val_list: list[str] = str_in.split("=")
             if len(key_val_list) != 2:
                 raise ModelicaSystemError(f"Invalid 'key=value' pair: {str_in}")
+            if len(key_val_list[0]) == 0:
+                raise ModelicaSystemError(f"Empty key: {str_in}")
 
-            input_data_from_str: dict[str, str] = {key_val_list[0]: key_val_list[1]}
+            input_data_from_str: dict[str, str] = {str(key_val_list[0]): str(key_val_list[1])}
 
             return input_data_from_str
 
@@ -792,7 +794,12 @@ class ModelicaSystemABC(metaclass=abc.ABCMeta):
                         raise ModelicaSystemError(f"Invalid input data type for set*() function: {type(item)}!")
                     input_data = input_data | prepare_str(item)
             elif isinstance(input_arg, dict):
-                input_data = input_data | input_arg
+                input_arg_str: dict[str, str] = {}
+                for key, val in input_arg.items():
+                    if not isinstance(key, str) or len(key) == 0:
+                        raise ModelicaSystemError(f"Invalid key for set*() functions: {repr(key)}")
+                    input_arg_str[key] = str(val)
+                input_data = input_data | input_arg_str
             else:
                 raise ModelicaSystemError(f"Invalid input data type for set*() function: {type(input_arg)}!")
 
