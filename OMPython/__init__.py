@@ -58,23 +58,6 @@ from OMPython.modelica_doe_runner import (
     ModelicaDoERunner,
 )
 
-# the imports below are compatibility functionality (OMPython v4.0.0)
-from OMPython.ModelicaSystem import (
-    ModelicaSystem,
-    ModelicaSystemCmd,
-    ModelicaSystemDoE,
-)
-from OMPython.OMCSession import (
-    OMCSessionCmd,
-    OMCSessionException,
-    OMCSessionZMQ,
-
-    OMCProcessLocal,
-    OMCProcessPort,
-    OMCProcessDocker,
-    OMCProcessDockerContainer,
-)
-
 # global names imported if import 'from OMPython import *' is used
 __all__ = [
     'doe_get_solutions',
@@ -108,19 +91,4 @@ __all__ = [
     'OMPathRunnerBash',
     'OMPathRunnerLocal',
     'OMSessionRunner',
-
-    'ModelicaSystemCmd',
-    'ModelicaSystem',
-    'ModelicaSystemDoE',
-
-    'OMCSessionCmd',
-
-    'OMCSessionException',
-
-    'OMCSessionZMQ',
-
-    'OMCProcessLocal',
-    'OMCProcessPort',
-    'OMCProcessDocker',
-    'OMCProcessDockerContainer',
 ]
