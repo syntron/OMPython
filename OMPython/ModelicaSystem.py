@@ -3,13 +3,10 @@
 Definition of main class to run Modelica simulations - ModelicaSystem.
 """
 
-from __future__ import annotations
-
 import logging
 import numbers
 import os
 import pathlib
-import platform
 from typing import Any, Optional
 import warnings
 
@@ -94,7 +91,7 @@ class ModelicaSystem(ModelicaSystemOMC):
             simargs = {}
 
         if simflags is not None:
-            simargs_extra = ModelicaSystemCmd.parse_simflags(simflags=simflags)
+            simargs_extra = parse_simflags(simflags=simflags)
             simargs = simargs | simargs_extra
 
         return super().simulate_cmd(
@@ -116,7 +113,7 @@ class ModelicaSystem(ModelicaSystemOMC):
             simargs = {}
 
         if simflags is not None:
-            simargs_extra = ModelicaSystemCmd.parse_simflags(simflags=simflags)
+            simargs_extra = parse_simflags(simflags=simflags)
             simargs = simargs | simargs_extra
 
         return super().simulate(
@@ -137,7 +134,7 @@ class ModelicaSystem(ModelicaSystemOMC):
             simargs = {}
 
         if simflags is not None:
-            simargs_extra = ModelicaSystemCmd.parse_simflags(simflags=simflags)
+            simargs_extra = parse_simflags(simflags=simflags)
             simargs = simargs | simargs_extra
 
         return super().linearize(
@@ -372,95 +369,52 @@ class ModelicaSystemDoE(ModelicaDoEOMC):
 @depreciated_class(msg="Please use class ModelExecutionCmd instead!")
 class ModelicaSystemCmd(ModelExecutionCmd):
     """
-    Compatibility class; in the new version it is renamed as ModelExecutionCmd.
+    Compatibility class; not much content.
 
-    This class is only defined for the unit tests - it is NOT used within ModelicaSystem of v4.0.0!
+    Missing definitions:
+    * get_exe() - see self.definition.cmd_model_executable
+    * get_cmd() - use self.get_cmd_args() or self.definition().get_cmd()
+    * run() - use self.definition().run()
     """
 
-    def __init__(
-            self,
-            runpath: pathlib.Path,
-            modelname: str,
-            timeout: float = 10.0,
-    ) -> None:
-        super().__init__(
-            runpath=runpath,
-            timeout=timeout,
-            cmd_prefix=[],
-            model_name=modelname,
-        )
 
-    def get_exe(self) -> pathlib.Path:
-        """Get the path to the compiled model executable."""
+def parse_simflags(simflags: str) -> dict[str, Optional[str | dict[str, Any] | numbers.Number]]:
+    """
+    Parse a simflag definition; this is deprecated!
 
-        path_run = pathlib.Path(self._runpath)
-        if platform.system() == "Windows":
-            path_exe = path_run / f"{self._model_name}.exe"
-        else:
-            path_exe = path_run / self._model_name
+    The return data can be used as input for self.args_set().
+    """
+    warnings.warn(
+        message="The argument 'simflags' is depreciated and will be removed in future versions; "
+                "please use 'simargs' instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
 
-        if not path_exe.exists():
-            raise ModelicaSystemError(f"Application file path not found: {path_exe}")
+    simargs: dict[str, Optional[str | dict[str, Any] | numbers.Number]] = {}
 
-        return path_exe
+    args = [s for s in simflags.split(' ') if s]
+    for arg in args:
+        if arg[0] != '-':
+            raise ModelExecutionException(f"Invalid simulation flag: {arg}")
+        arg = arg[1:]
+        parts = arg.split('=')
+        if len(parts) == 1:
+            simargs[parts[0]] = None
+        elif parts[0] == 'override':
+            override = '='.join(parts[1:])
 
-    def get_cmd(self) -> list:
-        """
-        Get a list with the path to the executable and all command line args.
+            override_dict = {}
+            for item in override.split(','):
+                kv = item.split('=')
+                if not 0 < len(kv) < 3:
+                    raise ModelExecutionException(f"Invalid value for '-override': {override}")
+                if kv[0]:
+                    try:
+                        override_dict[kv[0]] = kv[1]
+                    except (KeyError, IndexError) as ex:
+                        raise ModelExecutionException(f"Invalid value for '-override': {override}") from ex
 
-        This can later be used as an argument for subprocess.run().
-        """
+            simargs[parts[0]] = override_dict
 
-        cmdl = [self.get_exe().as_posix()] + self.get_cmd_args()
-
-        return cmdl
-
-    def run(self) -> int:
-        cmd_definition = self.definition()
-        try:
-            returncode = cmd_definition.run()
-        except ModelExecutionException as exc:
-            raise ModelicaSystemError(f"Cannot execute model: {exc}") from exc
-        return returncode
-
-    @staticmethod
-    def parse_simflags(simflags: str) -> dict[str, Optional[str | dict[str, Any] | numbers.Number]]:
-        """
-        Parse a simflag definition; this is deprecated!
-
-        The return data can be used as input for self.args_set().
-        """
-        warnings.warn(
-            message="The argument 'simflags' is depreciated and will be removed in future versions; "
-                    "please use 'simargs' instead",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-
-        simargs: dict[str, Optional[str | dict[str, Any] | numbers.Number]] = {}
-
-        args = [s for s in simflags.split(' ') if s]
-        for arg in args:
-            if arg[0] != '-':
-                raise ModelExecutionException(f"Invalid simulation flag: {arg}")
-            arg = arg[1:]
-            parts = arg.split('=')
-            if len(parts) == 1:
-                simargs[parts[0]] = None
-            elif parts[0] == 'override':
-                override = '='.join(parts[1:])
-
-                override_dict = {}
-                for item in override.split(','):
-                    kv = item.split('=')
-                    if not 0 < len(kv) < 3:
-                        raise ModelExecutionException(f"Invalid value for '-override': {override}")
-                    if kv[0]:
-                        try:
-                            override_dict[kv[0]] = kv[1]
-                        except (KeyError, IndexError) as ex:
-                            raise ModelExecutionException(f"Invalid value for '-override': {override}") from ex
-
-                simargs[parts[0]] = override_dict
-
-        return simargs
+    return simargs
