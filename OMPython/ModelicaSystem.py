@@ -72,8 +72,8 @@ class ModelicaSystem(ModelicaSystemOMC):
     def setCommandLineOptions(self, commandLineOptions: str):
         super().set_command_line_options(command_line_option=commandLineOptions)
 
+    @staticmethod
     def _set_compatibility_helper(
-            self,
             pkey: str,
             args: Any,
             kwargs: dict[str, Any],
