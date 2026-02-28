@@ -113,7 +113,6 @@ __all__ = [
     'ModelicaSystem',
     'ModelicaSystemDoE',
 
-    'OMCSessionABC',
     'OMCSessionCmd',
 
     'OMCSessionException',
