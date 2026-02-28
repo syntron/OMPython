@@ -89,7 +89,6 @@ __all__ = [
     'ModelicaDoEOMC',
     'ModelicaDoERunner',
     'ModelicaSystemABC',
-    'ModelicaSystemDoE',
     'ModelicaSystemError',
     'ModelicaSystemOMC',
     'ModelicaSystemRunner',
@@ -112,6 +111,7 @@ __all__ = [
 
     'ModelicaSystemCmd',
     'ModelicaSystem',
+    'ModelicaSystemDoE',
 
     'OMCSessionABC',
     'OMCSessionCmd',
