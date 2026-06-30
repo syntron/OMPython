@@ -10,7 +10,7 @@ import numbers
 import os
 import queue
 import threading
-from typing import Any, cast, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from OMPython.model_execution import (
     ModelExecutionData,
@@ -187,7 +187,7 @@ class ModelicaDoEABC(metaclass=abc.ABCMeta):
             for idx_non_structural, pk_non_structural in enumerate(param_non_structural_combinations):
                 sim_param_non_structural = {}
                 for idx, pk in enumerate(param_non_structure.keys()):
-                    sim_param_non_structural[pk] = cast(Any, pk_non_structural[idx])
+                    sim_param_non_structural[pk] = pk_non_structural[idx]
 
                 resfilename = f"DOE_{idx_pc_structure:09d}_{idx_non_structural:09d}.mat"
                 logger.info(f"use result file {repr(resfilename)} "
